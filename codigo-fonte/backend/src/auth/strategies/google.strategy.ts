@@ -37,27 +37,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
     if (account) return account.user;
 
-    let user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email,
-          name: profile.displayName || email.split('@')[0],
-          passwordHash: '',
-          imageUrl: profile.photos?.[0]?.value,
-          role: 'ADMIN',
-        },
-      });
+      throw new Error('User not found');
     }
-
-    await this.prisma.account.create({
-      data: {
-        userId: user.id,
-        provider,
-        providerAccountId,
-      },
-    });
 
     return user;
   }
