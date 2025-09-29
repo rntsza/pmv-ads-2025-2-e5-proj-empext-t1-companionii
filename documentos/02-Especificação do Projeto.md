@@ -49,9 +49,7 @@ Descreva brevemente a arquitetura definida para o projeto e as tecnologias a ser
 | RF-009 | Filtros/visões por empresa/label e por status.                                                | MÉDIA      |
 | RF-010 | Dashboard de métricas: tempo por empresa/tipo de tarefa, histórico semanal/mensal.            | MÉDIA      |
 | RF-011 | Histórico/auditoria de alterações de tarefa e tempo.                                          | MÉDIA      |
-| RF-012 | Integração GitHub: sincronizar commits/PRs como atividades.                                   | BAIXA      |
-| RF-013 | Integração Trello: importar cards como tarefas.                                               | BAIXA      |
-| RF-014 | Compartilhamento seguro de relatórios (link expira e/ou PDF).                                 | BAIXA      |
+| RF-012 | Compartilhamento seguro de relatórios (link expira e/ou PDF).                                 | BAIXA      |
 
 ### Requisitos não Funcionais
 
@@ -84,14 +82,6 @@ O projeto está restrito pelos itens apresentados na tabela a seguir.
 ## Diagrama de Caso de Uso
 
 ![Diagrama de Caso de Uso](img/diagrama.png)
-
-> **Links Úteis**:
->
-> - [Criando Casos de Uso](https://www.ibm.com/docs/pt-br/elm/6.0?topic=requirements-creating-use-cases)
-> - [Como Criar Diagrama de Caso de Uso: Tutorial Passo a Passo](https://gitmind.com/pt/fazer-diagrama-de-caso-uso.html/)
-> - [Lucidchart](https://www.lucidchart.com/)
-> - [Astah](https://astah.net/)
-> - [Diagrams](https://app.diagrams.net/)
 
 ## Arquitetura da Solução
 

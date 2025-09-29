@@ -6,7 +6,7 @@
 
 `2025/2`
 
-O Companion é uma plataforma web inteligente desenvolvida para desenvolvedores freelancers e pequenas equipes que precisam gerenciar múltiplos projetos e clientes de forma eficiente. O sistema combina um kanban temporal (Futuro | Hoje | Passado) com funcionalidades de time tracking, geração automática de relatórios profissionais através de IA, e métricas de produtividade, centralizando toda a gestão diária em uma interface visual intuitiva.
+O Companion é uma plataforma web inteligente desenvolvida para desenvolvedores freelancers e pequenas equipes que precisam gerenciar múltiplos projetos e clientes de forma eficiente. O sistema combina um kanban com funcionalidades de time tracking, geração automática de relatórios profissionais através de IA, e métricas de produtividade, centralizando toda a gestão diária em uma interface visual intuitiva.
 
 A solução visa resolver o problema da falta de uma ferramenta unificada que integre gestão de tarefas, controle de tempo e geração de relatórios, eliminando a necessidade de usar ferramentas desconectadas e processos manuais que geram perda de produtividade e dificultam a prestação de contas aos clientes.
 
