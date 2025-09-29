@@ -65,20 +65,20 @@ Isso causa perda de produtividade e falhas na prestação de contas.
 
 ### Requisitos Funcionais
 
-| ID     | Descrição do Requisito                                                                        | Prioridade |
-| ------ | --------------------------------------------------------------------------------------------- | ---------- |
-| RF-001 | Autenticação/Autorização com papéis (Proprietário, Admin, Colaborador, Cliente).              | ALTA       |
-| RF-002 | CRUD de Empresas/Labels com cor/identidade visual.                                            | ALTA       |
-| RF-003 | CRUD de Tarefas Diárias (título, empresa, estimativa, descrição).                             | ALTA       |
-| RF-004 | Kanban com colunas A Fazer \| Revisão \| Em Progresso \| Concluído e suporte a drag-and-drop. | ALTA       |
-| RF-005 | Assistente IA: gerar resumos profissionais das tarefas concluídas no período.                 | ALTA       |
-| RF-006 | Geração de relatórios por empresa/label (período selecionável).                               | ALTA       |
-| RF-007 | Exportação em PDF dos relatórios com layout profissional.                                     | ALTA       |
-| RF-008 | Templates de relatório por empresa (branding e seções padrão).                                | MÉDIA      |
-| RF-009 | Filtros/visões por empresa/label e por status.                                                | MÉDIA      |
-| RF-010 | Dashboard de métricas: tempo por empresa/tipo de tarefa, histórico semanal/mensal.            | MÉDIA      |
-| RF-011 | Histórico/auditoria de alterações de tarefa e tempo.                                          | MÉDIA      |
-| RF-012 | Compartilhamento seguro de relatórios (link expira e/ou PDF).                                 | BAIXA      |
+| ID      | Descrição do Requisito                                                                        | Prioridade | Status             | Responsável Principal              |
+|---------|-----------------------------------------------------------------------------------------------|------------|--------------------|----------------------------------- |
+| RF-001  | Autenticação/Autorização com papéis (Proprietário, Admin, Colaborador, Cliente).              | ALTA       | Concluído          | Aaron Carvalho Balbino             |
+| RF-002  | CRUD de Empresas/Labels com cor/identidade visual.                                            | ALTA       | Backend Concluído  | William da Silva Rodrigues         |
+| RF-003  | CRUD de Tarefas Diárias (título, empresa, estimativa, descrição).                             | ALTA       | Backend Concluído  | Enzo Gomes Azevedo                 |
+| RF-004  | Kanban com colunas A Fazer \| Revisão \| Em Progresso \| Concluído e suporte a drag-and-drop. | ALTA       | Backend Concluído  | Leonardo Rodrigues Barbosa Maia    |
+| RF-005  | Assistente IA: gerar resumos profissionais das tarefas concluídas no período.                 | ALTA       | Em Desenvolvimento | William da Silva Rodrigues         |
+| RF-006  | Geração de relatórios por empresa/label (período selecionável).                               | ALTA       | Em Desenvolvimento | Aaron Carvalho Balbino             |
+| RF-007  | Exportação em PDF dos relatórios com layout profissional.                                     | ALTA       | Em Desenvolvimento | Adriana Pereira Nascimento         |
+| RF-008  | Templates de relatório por empresa (branding e seções padrão).                                | MÉDIA      | Planejado          | Enzo Gomes Azevedo                 |
+| RF-009  | Filtros/visões por empresa/label e por status.                                                | MÉDIA      | Planejado          | Leonardo Rodrigues Barbosa Maia    |
+| RF-010  | Dashboard de métricas: tempo por empresa/tipo de tarefa, histórico semanal/mensal.            | MÉDIA      | Planejado          | William da Silva Rodrigues         |
+| RF-011  | Histórico/auditoria de alterações de tarefa e tempo.                                          | MÉDIA      | Planejado          | Aaron Carvalho Balbino             |
+| RF-014  | Compartilhamento seguro de relatórios (link expira e/ou PDF).                                 | BAIXA      | Planejado          | Leonardo Rodrigues Barbosa Maia    |
 
 ### Requisitos não Funcionais
 
