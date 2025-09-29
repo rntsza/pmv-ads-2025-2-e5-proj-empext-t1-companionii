@@ -20,11 +20,40 @@ Sistema web híbrido kanban/diário com IA integrada que oferece organização t
 
 ## Arquitetura e Tecnologias
 
-Descreva brevemente a arquitetura definida para o projeto e as tecnologias a serem utilizadas. Sugere-se a criação de um diagrama de componentes da solução.
+A arquitetura adotada é baseada em uma **abordagem em camadas (Layered Architecture)**, projetada para ser modular e escalável, dividindo as responsabilidades entre as trilhas de Frontend e Backend.
 
-## Project Model Canvas
+### Stack de Referência (Restrição 04)
 
-![Project Model Canvas](documentos/img/Project-Model-Canvas.jpeg)
+* **Frontend:** React (para web app responsivo).
+* **Backend:** Node.js/NestJS (para lógica de negócio e APIs RESTful).
+* **Banco de Dados:** SQL (utilizando Prisma como ORM/Client).
+* **Inteligência Artificial:** Integração via API externa (Gemini API) para geração de resumos.
+
+### Camadas da Solução
+
+* **Apresentação (Frontend):** Responsável pela interface do usuário e responsividade (RNF-001). Implementa o Kanban, Dashboard e as telas de relatórios.
+* **Serviço/Aplicação (Backend - NestJS):** Contém a lógica de negócio, autenticação (RF-001), segurança (RNF-005) e orquestra a comunicação com o Banco de Dados e a API de IA.
+* **Dados (SQL + Prisma):** Armazena informações de usuários, tarefas e relatórios. Garante a integridade e normalização dos dados (RNF-004).
+* **IA Externa:** Serviço separado para processar e gerar resumos profissionais (RF-005).
+
+
+# Project Model Canvas – Companion
+
+### Justificativa
+Empresas têm dificuldade em organizar tarefas e gerar relatórios.  
+Isso causa perda de produtividade e falhas na prestação de contas.
+
+### Objetivos
+- Criar um sistema híbrido (Kanban + Diário) com IA  
+- Reduzir tempo de planejamento e aumentar execução  
+- Melhorar clareza e produtividade
+
+### Benefícios
+- Organização simples e prática  
+- Relatórios rápidos e profissionais  
+- Mais controle do tempo gasto
+
+ ![Project Model Canvas](img/project-model-canvas.png)
 
 ## Requisitos
 
