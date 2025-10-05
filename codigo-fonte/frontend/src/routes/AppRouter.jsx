@@ -10,6 +10,9 @@ import { FullPageLoader, ToastContainer } from '../components/ui';
 import { LoginPage, RegisterPage, ForgotPasswordPage } from '../pages/auth';
 import GoogleCallbackPage from '../pages/auth/GoogleCallbackPage';
 import HomePage from '../pages/HomePage';
+import ReportsPage from '../pages/ReportsPage';
+import KanbanPage from '../pages/KanbanPage';
+import ProjectsPage from '../pages/ProjectsPage';
 import { useToast } from '../hooks/useToast';
 
 const AppRouter = () => {
@@ -31,7 +34,7 @@ const AppRouter = () => {
               element={<GoogleCallbackPage />}
             />
 
-      
+
             <Route
               path="/dashboard"
               element={
@@ -41,7 +44,34 @@ const AppRouter = () => {
               }
             />
 
-           
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <ReportsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/kanban"
+              element={
+                <ProtectedRoute>
+                  <KanbanPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/projects"
+              element={
+                <ProtectedRoute>
+                  <ProjectsPage />
+                </ProtectedRoute>
+              }
+            />
+
+
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
