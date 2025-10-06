@@ -9,6 +9,8 @@ import { InvitesModule } from './invites/invites.module';
 import { ProjectsService } from './projects/projects.service';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
+import { GeminiService } from './ia/gemini.service';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -33,7 +35,8 @@ import { TasksModule } from './tasks/tasks.module';
     InvitesModule,
     ProjectsModule,
     TasksModule,
+    DashboardModule,
   ],
-  providers: [ProjectsService],
+  providers: [ProjectsService, GeminiService],
 })
 export class AppModule {}

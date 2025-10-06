@@ -49,7 +49,7 @@ npm run start:dev
 
 - [x] Auth JWT + RBAC + OAuth Google
 - [x] CRUD básico Users
-- [ ] Relatórios (agregações e PDF)
+- [ ] Relatórios (agregações)
 - [ ] Integração IA para resumo de período
 - [ ] Métricas
 
