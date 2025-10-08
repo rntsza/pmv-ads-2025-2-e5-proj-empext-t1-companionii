@@ -13,9 +13,13 @@ export class TasksService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateTaskDto, createdById?: string) {
-    const connectOrCreate = (dto.tags ?? []).map((name) => ({
-      where: { projectId_name: { projectId: dto.projectId, name } },
-      create: { name, projectId: dto.projectId },
+    const tagCreates = (dto.tags ?? []).map((name) => ({
+      tag: {
+        connectOrCreate: {
+          where: { projectId_name: { projectId: dto.projectId, name } }, // UNIQUE de Tag
+          create: { name, projectId: dto.projectId },
+        },
+      },
     }));
 
     return await this.prisma.task.create({
@@ -28,7 +32,7 @@ export class TasksService {
         dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
         estimatedMin: dto.estimatedMin,
         createdById: createdById ?? null,
-        tags: connectOrCreate.length ? { connectOrCreate } : undefined,
+        tags: tagCreates.length ? { create: tagCreates } : undefined,
       },
       include: { tags: { include: { tag: true } } },
     });

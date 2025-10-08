@@ -1,10 +1,25 @@
 import { Transform } from 'class-transformer';
 import { IsString, IsStrongPassword } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class AcceptInviteDto {
-  @IsString() token: string;
-  @IsString() name: string;
+  @ApiProperty({
+    example: 'invite-token-123',
+    description: 'Token de convite recebido por e-mail.',
+  })
+  @IsString()
+  token: string;
 
+  @ApiProperty({ example: 'João Silva', description: 'Nome do usuário.' })
+  @IsString()
+  name: string;
+
+  @ApiProperty({
+    example: 'SenhaForte@123',
+    description:
+      'Senha forte contendo pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas, números e símbolos.',
+    minLength: 8,
+  })
   @Transform(({ value }) => value?.trim())
   @IsString()
   @IsStrongPassword({

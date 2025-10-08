@@ -9,6 +9,9 @@ import { InvitesModule } from './invites/invites.module';
 import { ProjectsService } from './projects/projects.service';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { IaModule } from './ia/ia.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -33,6 +36,9 @@ import { TasksModule } from './tasks/tasks.module';
     InvitesModule,
     ProjectsModule,
     TasksModule,
+    DashboardModule,
+    IaModule,
+    ReportsModule,
   ],
   providers: [ProjectsService],
 })
