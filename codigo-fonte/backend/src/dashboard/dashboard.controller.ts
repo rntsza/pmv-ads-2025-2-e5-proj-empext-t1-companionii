@@ -15,6 +15,7 @@ import { Role } from '../common/enums/role.enum';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { DashboardService } from './dashboard.service';
 import { GenerateReportDto } from '../reports/dto/generate-report.dto';
+import { DashboardHomeQueryDto } from './dto/dashboard-home-query.dto';
 
 @ApiTags('dashboard')
 @ApiBearerAuth()
@@ -25,11 +26,8 @@ export class DashboardController {
   constructor(private readonly service: DashboardService) {}
 
   @Get('home')
-  async home(
-    @Query('scope') scope: 'all' | 'project' = 'all',
-    @Query('projectId') projectId?: string,
-    @Query('date') date?: string,
-  ) {
+  async home(@Query() q: DashboardHomeQueryDto) {
+    const { scope = 'all', projectId, date } = q;
     return await this.service.getHome({ scope, projectId, date });
   }
 
