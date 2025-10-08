@@ -9,9 +9,9 @@ import { GenerateReportDto } from './dto/generate-report.dto';
 
 @ApiTags('reports')
 @ApiBearerAuth()
-@Controller('reports')
 @Roles(Role.ADMIN)
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@Controller('reports')
 export class ReportsController {
   constructor(private readonly service: ReportsService) {}
 

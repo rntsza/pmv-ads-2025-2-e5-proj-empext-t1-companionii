@@ -18,7 +18,7 @@ import { Role } from '../common/enums/role.enum';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { BoardStatus } from '@prisma/client';
+import { ListTasksQueryDto } from './dto/findall-task-query.dto';
 
 @ApiTags('tasks')
 @ApiBearerAuth()
@@ -29,16 +29,14 @@ export class TasksController {
   constructor(private readonly tasks: TasksService) {}
 
   @Post()
-  async create(@Body() dto: CreateTaskDto, @Req() req) {
+  async create(@Req() req: any, @Body() dto: CreateTaskDto) {
     return await this.tasks.create(dto, req.user.userId);
   }
 
   @Get()
-  async list(
-    @Query('projectId') projectId: string,
-    @Query('status') status?: string,
-  ) {
-    return await this.tasks.list({ projectId, status: status as BoardStatus });
+  async findAll(@Query() q: ListTasksQueryDto) {
+    const { projectId, status } = q;
+    return await this.tasks.list({ projectId, status: status });
   }
 
   @Patch(':id')

@@ -1,9 +1,20 @@
 import { Transform } from 'class-transformer';
 import { IsString, IsStrongPassword } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ResetPasswordDto {
-  @IsString() token: string;
+  @ApiProperty({
+    description: 'Token de redefinição de senha enviado por e-mail.',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
+  @IsString()
+  token: string;
 
+  @ApiProperty({
+    description:
+      'Nova senha do usuário. Deve conter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas, números e símbolos.',
+    example: 'NovaSenha@2024',
+  })
   @Transform(({ value }) => value?.trim())
   @IsString()
   @IsStrongPassword({

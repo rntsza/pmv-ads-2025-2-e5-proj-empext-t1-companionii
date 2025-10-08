@@ -18,6 +18,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { ProjectFindAllQueryDto } from './dto/findall-project-query.dto';
 
 @ApiTags('projects')
 @ApiBearerAuth()
@@ -33,7 +34,8 @@ export class ProjectsController {
   }
 
   @Get()
-  async findAll(@Query('companyId') companyId?: string) {
+  async findAll(@Query() q: ProjectFindAllQueryDto) {
+    const { companyId } = q;
     return await this.projects.findAll({ companyId });
   }
 
