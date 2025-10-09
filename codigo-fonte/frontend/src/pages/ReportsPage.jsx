@@ -1,97 +1,81 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { PDFViewer, pdf } from '@react-pdf/renderer';
 import { AppLayout } from '../layouts';
 import { Button, Modal } from '../components/ui';
 import { usePDFGenerator } from '../utils/pdfGenerator';
 import ReportPDFDocument from '../components/reports/ReportPDFDocument';
 import { projectsService } from '../services/projectsService';
+import { dashboardsService } from '../services/dashboardService';
 
-// Mock data para relatórios
-const mockReportsData = {
-  filters: {
-    projects: ['Todos os projetos', 'Projeto A', 'Projeto B', 'Projeto C'],
-    periods: [
-      'Este mês',
-      'Esta semana',
-      'Hoje',
-      'Últimos 7 dias',
-      'Últimos 30 dias',
-    ],
-  },
-  metrics: {
-    productivity: {
-      value: 0.0,
-      trend: 0,
-      label: 'Produtividade',
-      subtitle: '0/0',
-    },
-    efficiency: {
-      value: 100.0,
-      trend: 0,
-      label: 'Eficiência',
-      subtitle: '0.0h de 0.0h estimadas',
-    },
-    inProgress: {
-      value: 0,
-      label: 'Em Progresso',
-      subtitle: 'Tarefas ativas',
-    },
-    delayed: {
-      value: 0,
-      label: 'Atrasados',
-      subtitle: 'Precisam atenção',
-    },
-  },
-  priorityDistribution: [
-    { priority: 'Alta', count: 0, percentage: 0, color: 'bg-red-500' },
-    { priority: 'Média', count: 0, percentage: 0, color: 'bg-yellow-500' },
-    { priority: 'Baixa', count: 0, percentage: 0, color: 'bg-green-500' },
-  ],
-  aiInsights: {
-    available: false,
-    summary:
-      'Relatórios automáticos que transformam suas tarefas em insights acionáveis. Capture tempo investido, pontos de produtividade e métricas de desempenho.',
-    features: [
-      'Resumo diário - Apontar das últimas 24h, picos de foco e tarefas concluídas',
-      'Histórico completo - Insights sobre produtividade e oportunidades de otimização',
-    ],
-    buttons: [
-      { label: '+ Relatório diário', variant: 'primary' },
-      { label: '+ Relatório semanal', variant: 'secondary' },
-    ],
-  },
+const PERIOD_OPT = [
+  { label: 'Hoje', value: 'daily' },
+  { label: 'Esta semana', value: 'weekly' },
+  { label: 'Este mês', value: 'monthly' },
+];
+
+const priorityMeta = {
+  URGENT: { label: 'Urgente', color: 'bg-rose-600' },
+  HIGH: { label: 'Alta', color: 'bg-red-500' },
+  MEDIUM: { label: 'Média', color: 'bg-yellow-500' },
+  LOW: { label: 'Baixa', color: 'bg-green-500' },
 };
 
 const ReportsPage = () => {
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
-  const [selectedPeriod, setSelectedPeriod] = useState('Este mês');
-  const [reportsData] = useState(mockReportsData);
+  const [selectedPeriod, setSelectedPeriod] = useState(PERIOD_OPT[2].label); // "Este mês"
+  const [loading, setLoading] = useState(false);
+
+  // dados do resumo da API
+  const [summary, setSummary] = useState({
+    distribuicaoPrioridade: { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 },
+    produtividade: { minutos: 0, totalTasks: 0 },
+    eficiencia: { value: 100 },
+    emProgresso: 0,
+    atrasadas: 0,
+  });
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentReportData, setCurrentReportData] = useState(null);
   const { generateDaily, generateWeekly, generateTest } = usePDFGenerator();
 
+  const priorityDistUI = useMemo(() => {
+    const dist = summary.distribuicaoPrioridade || {};
+    const total =
+      (dist.LOW ?? 0) +
+        (dist.MEDIUM ?? 0) +
+        (dist.HIGH ?? 0) +
+        (dist.URGENT ?? 0) || 1;
+
+    const order = ['URGENT', 'HIGH', 'MEDIUM', 'LOW'];
+    return order
+      .map(key => ({
+        key,
+        label: priorityMeta[key].label,
+        color: priorityMeta[key].color,
+        count: dist[key] ?? 0,
+        percentage: Math.round(((dist[key] ?? 0) / total) * 100),
+      }))
+      .filter(i => i); // sanity
+  }, [summary]);
+
   const handleGenerateReport = async type => {
     setIsGenerating(true);
     try {
       let result;
-      if (type === 'daily') {
-        result = generateDaily();
-      } else if (type === 'weekly') {
-        result = generateWeekly();
-      } else if (type === 'test') {
-        result = generateTest();
-      }
+      if (type === 'daily') result = generateDaily();
+      else if (type === 'weekly') result = generateWeekly();
+      else if (type === 'test') result = generateTest();
 
       if (result?.success) {
         setCurrentReportData(result);
         setIsModalOpen(true);
       } else {
-        console.error('Erro ao gerar PDF:', result?.error);
+        console.error('Error generating PDF:', result?.error);
       }
     } catch (error) {
-      console.error('Erro ao gerar relatório:', error);
+      console.error('Error generating report:', error);
     } finally {
       setIsGenerating(false);
     }
@@ -115,7 +99,7 @@ const ReportsPage = () => {
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Erro ao fazer download do PDF:', error);
+      console.error('Error downloading PDF:', error);
     }
   };
 
@@ -129,6 +113,27 @@ const ReportsPage = () => {
       }
     })();
   }, []);
+
+  // Busca o resumo quando mudar projeto/período
+  useEffect(() => {
+    const fetchSummary = async () => {
+      setLoading(true);
+      try {
+        const periodEnum =
+          PERIOD_OPT.find(p => p.label === selectedPeriod)?.value || 'monthly';
+        const data = await dashboardsService.summary({
+          projectId: selectedProjectId || undefined,
+          period: periodEnum,
+        });
+        if (data) setSummary(data);
+      } catch (e) {
+        console.error('Error loading dashboard report data', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSummary();
+  }, [selectedProjectId, selectedPeriod]);
 
   return (
     <AppLayout pageType="reports">
@@ -172,9 +177,9 @@ const ReportsPage = () => {
               onChange={e => setSelectedPeriod(e.target.value)}
               className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {reportsData.filters.periods.map(period => (
-                <option key={period} value={period}>
-                  {period}
+              {PERIOD_OPT.map(p => (
+                <option key={p.value} value={p.label}>
+                  {p.label}
                 </option>
               ))}
             </select>
@@ -193,6 +198,13 @@ const ReportsPage = () => {
             </svg>
           </div>
         </div>
+
+        {/* Loading */}
+        {loading && (
+          <div className="mb-4 text-sm text-gray-500">
+            Carregando dados do relatório…
+          </div>
+        )}
 
         {/* Metrics Grid - Row 1 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -220,14 +232,14 @@ const ReportsPage = () => {
               Analise das prioridades das tarefas
             </p>
             <div className="space-y-2">
-              {reportsData.priorityDistribution.map(item => (
-                <div key={item.priority}>
+              {priorityDistUI.map(item => (
+                <div key={item.key}>
                   <div className="flex items-center justify-between text-sm mb-1">
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-3 h-3 rounded-full ${item.color}`}
                       ></div>
-                      <span className="text-gray-700">{item.priority}</span>
+                      <span className="text-gray-700">{item.label}</span>
                     </div>
                     <span className="font-medium">
                       {item.count} ({item.percentage}%)
@@ -264,18 +276,25 @@ const ReportsPage = () => {
               </svg>
             </div>
             <p className="text-sm text-gray-600 mb-3">
-              {reportsData.aiInsights.summary}
+              Relatórios automáticos que transformam suas tarefas em insights
+              acionáveis. Capture tempo investido, pontos de produtividade e
+              métricas de desempenho.
             </p>
             <ul className="space-y-2 mb-4">
-              {reportsData.aiInsights.features.map((feature, index) => (
-                <li
-                  key={index}
-                  className="flex items-start text-sm text-gray-700"
-                >
-                  <span className="text-black-500 mr-2">•</span>
-                  <span>{feature}</span>
-                </li>
-              ))}
+              <li className="flex items-start text-sm text-gray-700">
+                <span className="text-black-500 mr-2">•</span>
+                <span>
+                  Resumo diário - Apontar das últimas 24h, picos de foco e
+                  tarefas concluídas
+                </span>
+              </li>
+              <li className="flex items-start text-sm text-gray-700">
+                <span className="text-black-500 mr-2">•</span>
+                <span>
+                  Histórico completo - Insights sobre produtividade e
+                  oportunidades de otimização
+                </span>
+              </li>
             </ul>
             <div className="flex gap-3">
               <Button
@@ -294,6 +313,14 @@ const ReportsPage = () => {
               >
                 {isGenerating ? 'Gerando...' : '+ Relatório semanal'}
               </Button>
+              <Button
+                variant="outline"
+                size="small"
+                onClick={() => handleGenerateReport('monthly')}
+                disabled={isGenerating}
+              >
+                {isGenerating ? 'Gerando...' : '+ Relatório mensal'}
+              </Button>
             </div>
           </div>
         </div>
@@ -304,7 +331,7 @@ const ReportsPage = () => {
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-medium text-gray-600">
-                {reportsData.metrics.productivity.label}
+                Produtividade
               </h3>
               <svg
                 className="w-5 h-5 text-red-500"
@@ -321,19 +348,17 @@ const ReportsPage = () => {
               </svg>
             </div>
             <div className="text-3xl font-bold text-gray-900">
-              {reportsData.metrics.productivity.value}%
+              {Math.min(100, Math.round(summary.produtividade.minutos / 10))}%
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {reportsData.metrics.productivity.subtitle}
+              {`${summary.produtividade.minutos}min / ${summary.produtividade.totalTasks} tarefas`}
             </p>
           </div>
 
           {/* Eficiência */}
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">
-                {reportsData.metrics.efficiency.label}
-              </h3>
+              <h3 className="text-sm font-medium text-gray-600">Eficiência</h3>
               <svg
                 className="w-5 h-5 text-gray-400"
                 fill="none"
@@ -349,10 +374,10 @@ const ReportsPage = () => {
               </svg>
             </div>
             <div className="text-3xl font-bold text-gray-900">
-              {reportsData.metrics.efficiency.value}%
+              {summary.eficiencia.value}%
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {reportsData.metrics.efficiency.subtitle}
+              Eficiência baseada em estimado x realizado
             </p>
           </div>
 
@@ -360,7 +385,7 @@ const ReportsPage = () => {
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-medium text-gray-600">
-                {reportsData.metrics.inProgress.label}
+                Em Progresso
               </h3>
               <svg
                 className="w-5 h-5 text-gray-400"
@@ -377,19 +402,15 @@ const ReportsPage = () => {
               </svg>
             </div>
             <div className="text-3xl font-bold text-blue-600">
-              {reportsData.metrics.inProgress.value}
+              {summary.emProgresso}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {reportsData.metrics.inProgress.subtitle}
-            </p>
+            <p className="text-xs text-gray-500 mt-1">Tarefas ativas</p>
           </div>
 
           {/* Atrasados */}
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">
-                {reportsData.metrics.delayed.label}
-              </h3>
+              <h3 className="text-sm font-medium text-gray-600">Atrasadas</h3>
               <svg
                 className="w-5 h-5 text-gray-400"
                 fill="none"
@@ -405,11 +426,9 @@ const ReportsPage = () => {
               </svg>
             </div>
             <div className="text-3xl font-bold text-red-600">
-              {reportsData.metrics.delayed.value}
+              {summary.atrasadas}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {reportsData.metrics.delayed.subtitle}
-            </p>
+            <p className="text-xs text-gray-500 mt-1">Precisam atenção</p>
           </div>
         </div>
       </div>

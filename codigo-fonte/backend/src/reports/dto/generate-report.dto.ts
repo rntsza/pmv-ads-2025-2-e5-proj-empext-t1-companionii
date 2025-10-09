@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsUUID, IsISO8601 } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum Scope {
@@ -9,7 +9,7 @@ export enum Scope {
 export enum Period {
   DAILY = 'daily',
   WEEKLY = 'weekly',
-  CUSTOM = 'custom',
+  MONTHLY = 'monthly',
 }
 
 export class GenerateReportDto {
@@ -27,32 +27,14 @@ export class GenerateReportDto {
     example: 'b3b1c2d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   projectId?: string;
 
   @ApiProperty({
     enum: Period,
-    description: 'Período do relatório: "daily", "weekly" ou "custom".',
+    description: 'Período do relatório: "daily", "weekly" ou "monthly".',
     example: Period.DAILY,
   })
   @IsEnum(Period)
   period: Period;
-
-  @ApiPropertyOptional({
-    description:
-      'Data de início no formato ISO8601. Obrigatório se o período for "custom".',
-    example: '2024-06-01',
-  })
-  @IsOptional()
-  @IsISO8601()
-  startDate?: string;
-
-  @ApiPropertyOptional({
-    description:
-      'Data de término no formato ISO8601. Obrigatório se o período for "custom".',
-    example: '2024-06-30',
-  })
-  @IsOptional()
-  @IsISO8601()
-  endDate?: string;
 }

@@ -1,14 +1,21 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GeminiService } from '../ia/gemini.service';
 import { GenerateReportDto, Period, Scope } from './dto/generate-report.dto';
-import { startOfDay, endOfDay, subDays } from 'date-fns';
+import {
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+} from 'date-fns';
 import { BoardStatus, TaskPriority } from '@prisma/client';
 
 type Facts = {
   scope: 'all' | 'project';
   projectId?: string | null;
-  period: { start: string; end: string; label: 'daily' | 'weekly' | 'custom' };
+  period: { start: string; end: string; label: 'daily' | 'weekly' | 'monthly' };
   totals: {
     tasks: number;
     minutes: number;
@@ -54,7 +61,7 @@ export class ReportsService {
   ) {}
 
   async generate(dto: GenerateReportDto) {
-    const { start, end, label } = this.resolveRange(dto);
+    const { start, end } = this.resolveRange(dto);
     // 1) Fetch tasks + minimal joins for filters
     const tasks = await this.prisma.task.findMany({
       where: {
@@ -83,7 +90,11 @@ export class ReportsService {
     const facts: Facts = {
       scope: dto.scope,
       projectId: dto.projectId ?? null,
-      period: { start: start.toISOString(), end: end.toISOString(), label },
+      period: {
+        start: start.toISOString(),
+        end: end.toISOString(),
+        label: dto.period,
+      },
       totals: agg.totals,
       companies: agg.companies,
       tasks: tasks.slice(0, 500).map((t) => ({
@@ -111,7 +122,7 @@ export class ReportsService {
       data: {
         userId: await this.ensureSystemUserId(),
         companyId: null,
-        title: `Relatório ${label === 'daily' ? 'Diário' : label === 'weekly' ? 'Semanal' : 'Custom'}`,
+        title: `Relatório ${dto.period === Period.DAILY ? 'Diário' : dto.period === Period.WEEKLY ? 'Semanal' : 'Mensal'}`,
         aiSummary: html,
         periodStart: start,
         periodEnd: end,
@@ -123,27 +134,26 @@ export class ReportsService {
     return { reportId: report.id, html };
   }
 
-  private resolveRange(dto: GenerateReportDto) {
-    if (dto.period === Period.CUSTOM) {
-      if (!dto.startDate || !dto.endDate)
-        throw new BadRequestException(
-          'Período custom requer startDate e endDate',
-        );
-      return {
-        start: startOfDay(new Date(dto.startDate)),
-        end: endOfDay(new Date(dto.endDate)),
-        label: 'custom' as const,
-      };
-    }
+  private resolveRange(dto: { period: Period }) {
+    const now = new Date();
+
     if (dto.period === Period.DAILY) {
-      const end = endOfDay(new Date());
-      const start = startOfDay(new Date());
-      return { start, end, label: 'daily' as const };
+      const start = startOfDay(now);
+      const end = endOfDay(now);
+      return { start, end };
     }
-    // weekly
-    const end = endOfDay(new Date());
-    const start = startOfDay(subDays(end, 6));
-    return { start, end, label: 'weekly' as const };
+
+    if (dto.period === Period.WEEKLY) {
+      // semana ISO: segunda-domingo (ajuste se quiser domingo-sábado)
+      const start = startOfWeek(now, { weekStartsOn: 1 });
+      const end = endOfWeek(now, { weekStartsOn: 1 });
+      return { start, end };
+    }
+
+    // MONTHLY
+    const start = startOfMonth(now);
+    const end = endOfMonth(now);
+    return { start, end };
   }
 
   private aggregate(tasks: any[]) {
