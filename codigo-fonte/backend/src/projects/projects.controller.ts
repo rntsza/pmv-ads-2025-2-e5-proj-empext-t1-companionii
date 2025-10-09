@@ -39,6 +39,12 @@ export class ProjectsController {
     return await this.projects.findAll({ companyId });
   }
 
+  @Get('select')
+  async findAllSelect(@Query() q: ProjectFindAllQueryDto) {
+    const { companyId } = q;
+    return await this.projects.findAllSelect({ companyId });
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.projects.findOne(id);

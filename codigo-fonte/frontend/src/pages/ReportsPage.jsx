@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PDFViewer, pdf } from '@react-pdf/renderer';
 import { AppLayout } from '../layouts';
 import { Button, Modal } from '../components/ui';
 import { usePDFGenerator } from '../utils/pdfGenerator';
 import ReportPDFDocument from '../components/reports/ReportPDFDocument';
+import { projectsService } from '../services/projectsService';
 
 // Mock data para relatórios
 const mockReportsData = {
   filters: {
     projects: ['Todos os projetos', 'Projeto A', 'Projeto B', 'Projeto C'],
-    periods: ['Este mês', 'Esta semana', 'Hoje', 'Últimos 7 dias', 'Últimos 30 dias'],
+    periods: [
+      'Este mês',
+      'Esta semana',
+      'Hoje',
+      'Últimos 7 dias',
+      'Últimos 30 dias',
+    ],
   },
   metrics: {
     productivity: {
@@ -56,15 +63,16 @@ const mockReportsData = {
 };
 
 const ReportsPage = () => {
-  const [selectedProject, setSelectedProject] = useState(mockReportsData.filters.projects[0]);
-  const [selectedPeriod, setSelectedPeriod] = useState(mockReportsData.filters.periods[0]);
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState('Este mês');
   const [reportsData] = useState(mockReportsData);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentReportData, setCurrentReportData] = useState(null);
   const { generateDaily, generateWeekly, generateTest } = usePDFGenerator();
 
-  const handleGenerateReport = async (type) => {
+  const handleGenerateReport = async type => {
     setIsGenerating(true);
     try {
       let result;
@@ -111,6 +119,17 @@ const ReportsPage = () => {
     }
   };
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await projectsService.listAllSelect();
+        setProjects(data || []);
+      } catch (err) {
+        console.error('Error gettings projects', err);
+      }
+    })();
+  }, []);
+
   return (
     <AppLayout pageType="reports">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -119,13 +138,15 @@ const ReportsPage = () => {
           {/* Project Filter */}
           <div className="relative">
             <select
-              value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
+              value={selectedProjectId}
+              onChange={e => setSelectedProjectId(e.target.value)}
               className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {reportsData.filters.projects.map((project) => (
-                <option key={project} value={project}>
-                  {project}
+              <option value="">Todos os projetos</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                  {p.companyName ? ` — ${p.companyName}` : ''}
                 </option>
               ))}
             </select>
@@ -135,7 +156,12 @@ const ReportsPage = () => {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </div>
 
@@ -143,10 +169,10 @@ const ReportsPage = () => {
           <div className="relative">
             <select
               value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
+              onChange={e => setSelectedPeriod(e.target.value)}
               className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {reportsData.filters.periods.map((period) => (
+              {reportsData.filters.periods.map(period => (
                 <option key={period} value={period}>
                   {period}
                 </option>
@@ -158,7 +184,12 @@ const ReportsPage = () => {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </div>
         </div>
@@ -168,7 +199,9 @@ const ReportsPage = () => {
           {/* Distribuição por Prioridade */}
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-600">Distribuição por Prioridade</h3>
+              <h3 className="text-sm font-medium text-gray-600">
+                Distribuição por Prioridade
+              </h3>
               <svg
                 className="w-5 h-5 text-gray-400"
                 fill="none"
@@ -183,13 +216,17 @@ const ReportsPage = () => {
                 />
               </svg>
             </div>
-            <p className="text-xs text-gray-500 mb-3">Analise das prioridades das tarefas</p>
+            <p className="text-xs text-gray-500 mb-3">
+              Analise das prioridades das tarefas
+            </p>
             <div className="space-y-2">
-              {reportsData.priorityDistribution.map((item) => (
+              {reportsData.priorityDistribution.map(item => (
                 <div key={item.priority}>
                   <div className="flex items-center justify-between text-sm mb-1">
                     <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                      <div
+                        className={`w-3 h-3 rounded-full ${item.color}`}
+                      ></div>
                       <span className="text-gray-700">{item.priority}</span>
                     </div>
                     <span className="font-medium">
@@ -205,7 +242,9 @@ const ReportsPage = () => {
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 lg:col-span-3">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-1">Insights de IA</h3>
+                <h3 className="text-sm font-medium text-gray-900 mb-1">
+                  Insights de IA
+                </h3>
                 <p className="text-xs text-gray-500">
                   Análises automáticas e recomendações personalizadas
                 </p>
@@ -224,10 +263,15 @@ const ReportsPage = () => {
                 />
               </svg>
             </div>
-            <p className="text-sm text-gray-600 mb-3">{reportsData.aiInsights.summary}</p>
+            <p className="text-sm text-gray-600 mb-3">
+              {reportsData.aiInsights.summary}
+            </p>
             <ul className="space-y-2 mb-4">
               {reportsData.aiInsights.features.map((feature, index) => (
-                <li key={index} className="flex items-start text-sm text-gray-700">
+                <li
+                  key={index}
+                  className="flex items-start text-sm text-gray-700"
+                >
                   <span className="text-black-500 mr-2">•</span>
                   <span>{feature}</span>
                 </li>
@@ -307,7 +351,9 @@ const ReportsPage = () => {
             <div className="text-3xl font-bold text-gray-900">
               {reportsData.metrics.efficiency.value}%
             </div>
-            <p className="text-xs text-gray-500 mt-1">{reportsData.metrics.efficiency.subtitle}</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {reportsData.metrics.efficiency.subtitle}
+            </p>
           </div>
 
           {/* Em Progresso */}
@@ -333,7 +379,9 @@ const ReportsPage = () => {
             <div className="text-3xl font-bold text-blue-600">
               {reportsData.metrics.inProgress.value}
             </div>
-            <p className="text-xs text-gray-500 mt-1">{reportsData.metrics.inProgress.subtitle}</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {reportsData.metrics.inProgress.subtitle}
+            </p>
           </div>
 
           {/* Atrasados */}
@@ -359,7 +407,9 @@ const ReportsPage = () => {
             <div className="text-3xl font-bold text-red-600">
               {reportsData.metrics.delayed.value}
             </div>
-            <p className="text-xs text-gray-500 mt-1">{reportsData.metrics.delayed.subtitle}</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {reportsData.metrics.delayed.subtitle}
+            </p>
           </div>
         </div>
       </div>
@@ -373,7 +423,11 @@ const ReportsPage = () => {
       >
         <div className="space-y-4">
           <div className="flex justify-end gap-3">
-            <Button variant="outline" size="small" onClick={() => setIsModalOpen(false)}>
+            <Button
+              variant="outline"
+              size="small"
+              onClick={() => setIsModalOpen(false)}
+            >
               Fechar
             </Button>
             <Button variant="primary" size="small" onClick={handleDownloadPDF}>

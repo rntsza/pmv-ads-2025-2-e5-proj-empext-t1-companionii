@@ -15,11 +15,33 @@ export class ProjectsService {
   }
 
   async findAll(filter: { companyId?: string }) {
+    const where = filter.companyId
+      ? { companyId: filter.companyId }
+      : undefined;
+
     return await this.prisma.project.findMany({
-      where: { companyId: filter.companyId },
+      where,
       orderBy: { createdAt: 'desc' },
       include: {
         company: { select: { name: true } },
+        _count: { select: { tasks: true } },
+      },
+    });
+  }
+
+  async findAllSelect(filter: { companyId?: string }) {
+    const where = filter.companyId
+      ? { companyId: filter.companyId }
+      : undefined;
+
+    return await this.prisma.project.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        companyId: true,
+        company: { select: { id: true, name: true } },
         _count: { select: { tasks: true } },
       },
     });
