@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
 import { MailerModule } from '../mailer/mailer.module';
 import { AuthService } from './auth.service';
@@ -18,11 +18,15 @@ import { GoogleStrategy } from './strategies/google.strategy';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      // eslint-disable-next-line @typescript-eslint/require-await
-      useFactory: async (cfg: ConfigService) => ({
-        secret: cfg.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: cfg.get<string>('JWT_EXPIRES_IN') },
-      }),
+      useFactory: (cfg: ConfigService): JwtModuleOptions => {
+        const expiresRaw = cfg.get<string>('JWT_EXPIRES_IN');
+        const expiresIn = expiresRaw ? Number(expiresRaw) : undefined;
+
+        return {
+          secret: cfg.get<string>('JWT_SECRET'),
+          signOptions: { expiresIn: expiresIn },
+        };
+      },
     }),
   ],
   controllers: [AuthController],
