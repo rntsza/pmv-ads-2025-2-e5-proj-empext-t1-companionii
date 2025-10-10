@@ -280,6 +280,7 @@ model Report {
   totalTasks   Int      @default(0)
   totalMinutes Int      @default(0)
   pdfPath      String?
+  reportKey    String   @unique
   generatedAt  DateTime @default(now())
   createdAt    DateTime @default(now())
 

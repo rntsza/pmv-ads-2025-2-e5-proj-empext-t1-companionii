@@ -16,7 +16,7 @@ const ProtectedRoute = ({ children }) => {
 
   // Show loading while checking authentication
   if (isLoading || (token && !isAuthenticated)) {
-    return <FullPageLoader message="Verifying your session..." />;
+    return <FullPageLoader message="Verificando sua sessão..." />;
   }
 
   if (!isAuthenticated) {

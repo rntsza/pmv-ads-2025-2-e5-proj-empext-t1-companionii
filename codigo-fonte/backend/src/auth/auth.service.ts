@@ -2,6 +2,7 @@ import { randomBytes, createHash } from 'crypto';
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -168,5 +169,11 @@ export class AuthService {
     });
 
     return this.sign({ id: user.id, email: user.email, role: user.role });
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.users.findOne(userId);
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 }

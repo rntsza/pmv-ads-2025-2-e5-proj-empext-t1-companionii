@@ -1,6 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { startOfDay, endOfDay, parseISO, isValid, subDays } from 'date-fns';
+import {
+  startOfDay,
+  endOfDay,
+  parseISO,
+  isValid,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+} from 'date-fns';
 import { BoardStatus, TaskPriority } from '@prisma/client';
 import {
   GenerateReportDto,
@@ -228,23 +237,25 @@ export class DashboardService {
     return { start: startOfDay(base), end: endOfDay(base) };
   }
 
-  private resolveRange(dto: GenerateReportDto) {
-    if (dto.period === Period.CUSTOM) {
-      if (!dto.startDate || !dto.endDate) {
-        throw new Error('Período custom requer startDate e endDate');
-      }
-      return {
-        start: startOfDay(new Date(dto.startDate)),
-        end: endOfDay(new Date(dto.endDate)),
-      };
-    }
+  private resolveRange(dto: { period: Period }) {
+    const now = new Date();
+
     if (dto.period === Period.DAILY) {
-      const end = endOfDay(new Date());
-      const start = startOfDay(new Date());
+      const start = startOfDay(now);
+      const end = endOfDay(now);
       return { start, end };
     }
-    const end = endOfDay(new Date());
-    const start = startOfDay(subDays(end, 6));
+
+    if (dto.period === Period.WEEKLY) {
+      // semana ISO: segunda-domingo (ajuste se quiser domingo-sábado)
+      const start = startOfWeek(now, { weekStartsOn: 1 });
+      const end = endOfWeek(now, { weekStartsOn: 1 });
+      return { start, end };
+    }
+
+    // MONTHLY
+    const start = startOfMonth(now);
+    const end = endOfMonth(now);
     return { start, end };
   }
 }

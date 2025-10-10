@@ -1,14 +1,22 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GeminiService } from '../ia/gemini.service';
 import { GenerateReportDto, Period, Scope } from './dto/generate-report.dto';
-import { startOfDay, endOfDay, subDays } from 'date-fns';
+import {
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+} from 'date-fns';
 import { BoardStatus, TaskPriority } from '@prisma/client';
+import * as crypto from 'crypto';
 
 type Facts = {
   scope: 'all' | 'project';
   projectId?: string | null;
-  period: { start: string; end: string; label: 'daily' | 'weekly' | 'custom' };
+  period: { start: string; end: string; label: 'daily' | 'weekly' | 'monthly' };
   totals: {
     tasks: number;
     minutes: number;
@@ -44,9 +52,6 @@ type Facts = {
 @Injectable()
 export class ReportsService {
   private readonly basePrompt = process.env.AI_REPORT_PROMPT!;
-  private readonly tokenBudget = Number(
-    process.env.AI_REPORT_MAX_OUTPUT_TOKENS || 2048,
-  );
 
   constructor(
     private readonly prisma: PrismaService,
@@ -54,7 +59,18 @@ export class ReportsService {
   ) {}
 
   async generate(dto: GenerateReportDto) {
-    const { start, end, label } = this.resolveRange(dto);
+    const { start, end } = this.resolveRange(dto);
+
+    // unique fingerprint for caching by period and scope
+    const reportKey = this.buildKey(dto, start, end);
+
+    // 0) try to find an existing report
+    const existing = await this.prisma.report.findFirst({
+      where: { reportKey },
+    });
+
+    if (existing) return { reportId: existing.id, html: existing.aiSummary };
+
     // 1) Fetch tasks + minimal joins for filters
     const tasks = await this.prisma.task.findMany({
       where: {
@@ -83,7 +99,11 @@ export class ReportsService {
     const facts: Facts = {
       scope: dto.scope,
       projectId: dto.projectId ?? null,
-      period: { start: start.toISOString(), end: end.toISOString(), label },
+      period: {
+        start: start.toISOString(),
+        end: end.toISOString(),
+        label: dto.period,
+      },
       totals: agg.totals,
       companies: agg.companies,
       tasks: tasks.slice(0, 500).map((t) => ({
@@ -100,67 +120,84 @@ export class ReportsService {
       })),
     };
 
-    // 3) Limit the size of the “facts” to avoid exceeding the budget
-    const factsStr = this.shrinkFacts(JSON.stringify(facts), this.tokenBudget);
-
-    // 4) Call IA -> HTML
-    const html = await this.gemini.htmlFromFacts(this.basePrompt, factsStr);
+    // 3) Call IA -> HTML
+    const html = await this.gemini.htmlFromFacts(
+      this.basePrompt,
+      JSON.stringify(facts),
+    );
 
     // 5) (Opcional) Persists report
+    const title = `Relatório ${dto.period === Period.DAILY ? 'Diário' : dto.period === Period.WEEKLY ? 'Semanal' : 'Mensal'}`;
     const report = await this.prisma.report.create({
       data: {
         userId: await this.ensureSystemUserId(),
         companyId: null,
-        title: `Relatório ${label === 'daily' ? 'Diário' : label === 'weekly' ? 'Semanal' : 'Custom'}`,
+        title,
         aiSummary: html,
         periodStart: start,
         periodEnd: end,
         totalTasks: agg.totals.tasks,
         totalMinutes: agg.totals.minutes,
+        reportKey,
       },
     });
 
     return { reportId: report.id, html };
   }
 
-  private resolveRange(dto: GenerateReportDto) {
-    if (dto.period === Period.CUSTOM) {
-      if (!dto.startDate || !dto.endDate)
-        throw new BadRequestException(
-          'Período custom requer startDate e endDate',
-        );
-      return {
-        start: startOfDay(new Date(dto.startDate)),
-        end: endOfDay(new Date(dto.endDate)),
-        label: 'custom' as const,
-      };
-    }
+  private buildKey(dto: GenerateReportDto, start: Date, end: Date) {
+    const raw = `${dto.scope}:${dto.projectId ?? 'all'}:${start.toISOString()}:${end.toISOString()}`;
+    return crypto.createHash('sha256').update(raw).digest('hex');
+  }
+
+  private resolveRange(dto: { period: Period }) {
+    const now = new Date();
+
     if (dto.period === Period.DAILY) {
-      const end = endOfDay(new Date());
-      const start = startOfDay(new Date());
-      return { start, end, label: 'daily' as const };
+      const start = startOfDay(now);
+      const end = endOfDay(now);
+      return { start, end };
     }
-    // weekly
-    const end = endOfDay(new Date());
-    const start = startOfDay(subDays(end, 6));
-    return { start, end, label: 'weekly' as const };
+
+    if (dto.period === Period.WEEKLY) {
+      const start = startOfWeek(now, { weekStartsOn: 1 });
+      const end = endOfWeek(now, { weekStartsOn: 1 });
+      return { start, end };
+    }
+
+    // MONTHLY
+    const start = startOfMonth(now);
+    const end = endOfMonth(now);
+    return { start, end };
   }
 
   private aggregate(tasks: any[]) {
     const byStatus: Record<string, number> = {};
-    const byPriority: any = { alta: 0, media: 0, baixa: 0 };
+    const byPriority: Record<TaskPriority, number> = {
+      LOW: 0,
+      MEDIUM: 0,
+      HIGH: 0,
+      URGENT: 0,
+    };
     let minutes = 0;
 
     for (const t of tasks) {
       byStatus[t.status] = (byStatus[t.status] ?? 0) + 1;
-      if (t.priority && ['alta', 'media', 'baixa'].includes(t.priority))
-        byPriority[t.priority]++;
-      minutes += t.actualMinutes ?? 0;
+      if (t.priority)
+        (byPriority as any)[t.priority] =
+          ((byPriority as any)[t.priority] ?? 0) + 1;
+      minutes +=
+        (t.actualMin ?? 0) ||
+        (t.timeLogs?.reduce(
+          (a: number, l: any) => a + (l.durationMin ?? 0),
+          0,
+        ) ??
+          0);
     }
 
     const companiesMap = new Map<string, any>();
     for (const t of tasks) {
-      const c = t.company;
+      const c = t.project?.company;
       if (!c) continue;
       const entry = companiesMap.get(c.id) ?? {
         id: c.id,
@@ -179,7 +216,7 @@ export class ReportsService {
           minutes: 0,
         };
         p.tasks++;
-        p.minutes += t.actualMinutes ?? 0;
+        p.minutes += t.actualMin ?? 0;
         entry.projects.set(t.project.id, p);
       }
       companiesMap.set(c.id, entry);
@@ -202,32 +239,6 @@ export class ReportsService {
       },
       companies,
     };
-  }
-
-  /** shrink JSON to fit a simple character budget (~token ~= 4 chars) */
-  private shrinkFacts(json: string, maxTokens: number) {
-    const approxMaxChars = Math.floor(maxTokens * 4 * 0.9); // margem
-    if (json.length <= approxMaxChars) return json;
-
-    // safe cut: keeps header and part of the tasks
-    const headEnd = json.indexOf('"tasks":');
-    if (headEnd === -1) return json.slice(0, approxMaxChars);
-
-    const head = json.slice(0, headEnd);
-    const tasksStart = json.indexOf('[', headEnd);
-    const tasksEnd = json.lastIndexOf(']');
-    const tasksArr = JSON.parse(json.slice(tasksStart, tasksEnd + 1)) as any[];
-
-    // keep max N tasks
-    const keep = Math.max(20, Math.floor(tasksArr.length * 0.25));
-    const trimmed = JSON.stringify(tasksArr.slice(0, keep));
-
-    let candidate = `${head}"tasks":${trimmed}}`;
-    if (candidate.length > approxMaxChars) {
-      // shorter fallback: only headers
-      candidate = `${head}"tasks":[]}`;
-    }
-    return candidate;
   }
 
   private async ensureSystemUserId(): Promise<string> {

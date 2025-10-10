@@ -8,7 +8,6 @@ const useAuthStore = create(
       // State
       user: null,
       token: null,
-      rToken: null,
       isLoading: false,
       isAuthenticated: false,
       loginAttempts: 0,
@@ -19,12 +18,11 @@ const useAuthStore = create(
         set({ isLoading: true });
         try {
           const response = await authService.login(credentials);
-          const { user, token, refreshToken: rToken } = response;
+          const { user, token } = response;
 
           set({
             user,
             token,
-            rToken,
             isAuthenticated: true,
             isLoading: false,
             loginAttempts: 0,
@@ -46,7 +44,7 @@ const useAuthStore = create(
       register: async userData => {
         set({ isLoading: true });
         try {
-          const response = await authService.register(userData);
+          await authService.register(userData);
           set({ isLoading: false });
           return { success: true, message: 'Registration successful' };
         } catch (error) {
@@ -58,7 +56,7 @@ const useAuthStore = create(
       forgotPassword: async email => {
         set({ isLoading: true });
         try {
-          const response = await authService.forgotPassword(email);
+          await authService.forgotPassword(email);
           set({ isLoading: false });
           return { success: true, message: 'Password reset email sent' };
         } catch (error) {
@@ -79,7 +77,6 @@ const useAuthStore = create(
           set({
             user: null,
             token: null,
-            refreshToken: null,
             isAuthenticated: false,
             isLoading: false,
             loginAttempts: 0,
@@ -88,28 +85,29 @@ const useAuthStore = create(
         }
       },
 
-      refreshToken: async () => {
-        const { refreshToken: currentRefreshToken } = get();
-        if (!currentRefreshToken) {
-          throw new Error('No refresh token available');
-        }
+      // TODO: sem refresh token por enquanto
+      // refreshToken: async () => {
+      //   const { refreshToken: currentRefreshToken } = get();
+      //   if (!currentRefreshToken) {
+      //     throw new Error('No refresh token available');
+      //   }
 
-        try {
-          const response = await authService.refreshToken(currentRefreshToken);
-          const { token, refreshToken: newRefreshToken } = response;
+      //   try {
+      //     const response = await authService.refreshToken(currentRefreshToken);
+      //     const { token, refreshToken: newRefreshToken } = response;
 
-          set({
-            token,
-            refreshToken: newRefreshToken,
-          });
+      //     set({
+      //       token,
+      //       refreshToken: newRefreshToken,
+      //     });
 
-          return token;
-        } catch (error) {
-          // If refresh fails, logout user
-          get().logout();
-          throw error;
-        }
-      },
+      //     return token;
+      //   } catch (error) {
+      //     // If refresh fails, logout user
+      //     get().logout();
+      //     throw error;
+      //   }
+      // },
 
       // Check if user is rate limited
       isRateLimited: () => {
@@ -118,7 +116,10 @@ const useAuthStore = create(
         const timeSinceLastAttempt = now - (lastLoginAttempt || 0);
         const cooldownPeriod = 15 * 60 * 1000; // 15 minutes
 
-        return loginAttempts >= 5 && timeSinceLastAttempt < cooldownPeriod;
+        return (
+          loginAttempts >= (import.meta.env.VITE_MAX_LOGIN_ATTEMPTS || 5) &&
+          timeSinceLastAttempt < cooldownPeriod
+        );
       },
 
       // Get remaining cooldown time
@@ -145,6 +146,7 @@ const useAuthStore = create(
               isAuthenticated: true,
             });
           } catch (error) {
+            console.log(error);
             // Token is invalid, clear auth state
             get().logout();
           }

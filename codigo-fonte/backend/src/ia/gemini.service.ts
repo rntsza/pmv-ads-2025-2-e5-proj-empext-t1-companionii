@@ -4,8 +4,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 export type GeminiOptions = {
   model: string;
   temperature: number;
-  maxOutputTokens: number;
-  timeoutMs: number;
 };
 
 @Injectable()
@@ -21,43 +19,32 @@ export class GeminiService {
       model: this.opts.model,
       generationConfig: {
         temperature: this.opts.temperature,
-        maxOutputTokens: this.opts.maxOutputTokens,
         candidateCount: 1,
-        responseMimeType: 'text/html',
+        responseMimeType: 'text/plain',
       },
       systemInstruction: systemPrompt,
     });
-
-    const controller = new AbortController();
-    const to = setTimeout(() => controller.abort(), this.opts.timeoutMs);
-
-    try {
-      const res = await model.generateContent(
+    const res = await model.generateContent({
+      contents: [
         {
-          contents: [
+          parts: [
             {
-              parts: [
-                {
-                  text: `Gere um relatório em HTML. Dados a seguir em JSON:
+              text: `Gere um relatório em HTML com base no JSON de fatos a seguir:
 ${facts}
 
-Requisitos:
-- Retorne APENAS HTML (sem <html>, <head>).
+Requisitos do HTML:
+- Não inclua <html> ou <head>; apenas o conteúdo que vai dentro do <body>.
 - Seções: <h2>Resumo Executivo</h2>, <h2>Detalhado</h2>, <h2>Métricas</h2>, <h2>Próximas Ações</h2>.
-- Não inclua dados fora do JSON.
+- Não inclua Markdown como marcadores de linguagem ou crases, nem comentários.
+- Não invente dados; use somente o que está nos fatos.'
+- Use classes do Tailwind CSS para formatação (ex: 'text-red-500', 'font-bold', 'mb-4', 'p-2', 'border', 'rounded').
 - Quando aplicável, agrupe por empresa e projeto.`,
-                },
-              ],
-              role: 'user',
             },
           ],
+          role: 'user',
         },
-        { signal: controller.signal as any },
-      );
-
-      return res.response.text();
-    } finally {
-      clearTimeout(to);
-    }
+      ],
+    });
+    return res.response.text();
   }
 }
