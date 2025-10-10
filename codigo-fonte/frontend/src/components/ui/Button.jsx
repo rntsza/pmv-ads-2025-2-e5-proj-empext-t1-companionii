@@ -15,7 +15,7 @@ const Button = forwardRef(
     ref,
   ) => {
     const baseClasses =
-      'inline-flex items-center justify-center font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+      'inline-flex items-center justify-center font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer';
 
     const variants = {
       primary: 'bg-black text-white hover:bg-gray-800 focus:ring-black',

@@ -1,11 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
-import { PDFViewer, pdf } from '@react-pdf/renderer';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { AppLayout } from '../layouts';
 import { Button, Modal } from '../components/ui';
-import { usePDFGenerator } from '../utils/pdfGenerator';
-import ReportPDFDocument from '../components/reports/ReportPDFDocument';
 import { projectsService } from '../services/projectsService';
 import { dashboardsService } from '../services/dashboardService';
+import { aiReportsService } from '../services/aiReportsService';
+import { useToast } from '../hooks/useToast';
 
 const PERIOD_OPT = [
   { label: 'Hoje', value: 'daily' },
@@ -21,9 +20,10 @@ const priorityMeta = {
 };
 
 const ReportsPage = () => {
+  const { toast } = useToast();
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
-  const [selectedPeriod, setSelectedPeriod] = useState(PERIOD_OPT[2].label); // "Este mês"
+  const [selectedPeriod, setSelectedPeriod] = useState(PERIOD_OPT[0].label);
   const [loading, setLoading] = useState(false);
 
   // dados do resumo da API
@@ -37,8 +37,8 @@ const ReportsPage = () => {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentReportData, setCurrentReportData] = useState(null);
-  const { generateDaily, generateWeekly, generateTest } = usePDFGenerator();
+  const [aiHtml, setAiHtml] = useState('');
+  const previewRef = useRef(null);
 
   const priorityDistUI = useMemo(() => {
     const dist = summary.distribuicaoPrioridade || {};
@@ -60,47 +60,46 @@ const ReportsPage = () => {
       .filter(i => i); // sanity
   }, [summary]);
 
-  const handleGenerateReport = async type => {
+  const handleGenerateAI = async (
+    periodValue /* 'daily'|'weekly'|'monthly' */,
+  ) => {
     setIsGenerating(true);
     try {
-      let result;
-      if (type === 'daily') result = generateDaily();
-      else if (type === 'weekly') result = generateWeekly();
-      else if (type === 'test') result = generateTest();
-
-      if (result?.success) {
-        setCurrentReportData(result);
-        setIsModalOpen(true);
-      } else {
-        console.error('Error generating PDF:', result?.error);
-      }
-    } catch (error) {
-      console.error('Error generating report:', error);
+      const { html } = await aiReportsService.generate({
+        projectId: selectedProjectId || undefined,
+        period: periodValue,
+      });
+      setAiHtml(html || '<p>Nenhum conteúdo retornado.</p>');
+      toast.success('Relatório de IA gerado com sucesso!');
+      setIsModalOpen(true);
+    } catch (err) {
+      toast.error('Erro ao gerar relatório de IA. Tente novamente.');
+      console.error('Error genarating IA report:', err);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleDownloadPDF = async () => {
-    if (!currentReportData) return;
+  const handleDownloadHTML = () => {
+    const blob = new Blob([aiHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const label =
+      (PERIOD_OPT.find(p => p.label === selectedPeriod)?.value || 'daily') ??
+      'relatorio';
+    a.href = url;
+    a.download = `${label}-ia-${new Date().toISOString().split('T')[0]}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
-    try {
-      const blob = await pdf(
-        <ReportPDFDocument
-          reportData={currentReportData.data}
-          reportType={currentReportData.type}
-        />,
-      ).toBlob();
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `relatorio-${currentReportData.type}-${new Date().toISOString().split('T')[0]}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-    }
+  const handlePrintHTML = () => {
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.open();
+    win.document.write(aiHtml);
+    win.document.close();
+    win.onload = () => win.print();
   };
 
   useEffect(() => {
@@ -120,7 +119,7 @@ const ReportsPage = () => {
       setLoading(true);
       try {
         const periodEnum =
-          PERIOD_OPT.find(p => p.label === selectedPeriod)?.value || 'monthly';
+          PERIOD_OPT.find(p => p.label === selectedPeriod)?.value || 'daily';
         const data = await dashboardsService.summary({
           projectId: selectedProjectId || undefined,
           period: periodEnum,
@@ -145,11 +144,11 @@ const ReportsPage = () => {
             <select
               value={selectedProjectId}
               onChange={e => setSelectedProjectId(e.target.value)}
-              className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
             >
               <option value="">Todos os projetos</option>
               {projects.map(p => (
-                <option key={p.id} value={p.id}>
+                <option key={p.id} value={p.id} className="cursor-pointer">
                   {p.name}
                   {p.companyName ? ` — ${p.companyName}` : ''}
                 </option>
@@ -175,10 +174,14 @@ const ReportsPage = () => {
             <select
               value={selectedPeriod}
               onChange={e => setSelectedPeriod(e.target.value)}
-              className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
             >
               {PERIOD_OPT.map(p => (
-                <option key={p.value} value={p.label}>
+                <option
+                  key={p.value}
+                  value={p.label}
+                  className="cursor-pointer"
+                >
                   {p.label}
                 </option>
               ))}
@@ -300,15 +303,20 @@ const ReportsPage = () => {
               <Button
                 variant="primary"
                 size="small"
-                onClick={() => handleGenerateReport('daily')}
+                onClick={() =>
+                  handleGenerateAI(
+                    PERIOD_OPT.find(p => p.label === selectedPeriod)?.value ||
+                      'daily',
+                  )
+                }
                 disabled={isGenerating}
               >
-                {isGenerating ? 'Gerando...' : '+ Relatório diário'}
+                {isGenerating ? 'Gerando... Isso pode demorar' : '+ Relatório'}
               </Button>
-              <Button
+              {/* <Button
                 variant="outline"
                 size="small"
-                onClick={() => handleGenerateReport('weekly')}
+                onClick={() => handleGenerateAI('weekly')}
                 disabled={isGenerating}
               >
                 {isGenerating ? 'Gerando...' : '+ Relatório semanal'}
@@ -316,11 +324,11 @@ const ReportsPage = () => {
               <Button
                 variant="outline"
                 size="small"
-                onClick={() => handleGenerateReport('monthly')}
+                onClick={() => handleGenerateAI('monthly')}
                 disabled={isGenerating}
               >
                 {isGenerating ? 'Gerando...' : '+ Relatório mensal'}
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
@@ -437,33 +445,33 @@ const ReportsPage = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Preview do Relatório"
+        title="Preview do Relatório de IA"
         size="xlarge"
       >
         <div className="space-y-4">
           <div className="flex justify-end gap-3">
+            <Button variant="outline" size="small" onClick={handleDownloadHTML}>
+              ⬇️ Salvar .HTML
+            </Button>
+            <Button variant="outline" size="small" onClick={handlePrintHTML}>
+              🖨️ Imprimir / Salvar PDF
+            </Button>
             <Button
-              variant="outline"
+              variant="primary"
               size="small"
               onClick={() => setIsModalOpen(false)}
             >
               Fechar
             </Button>
-            <Button variant="primary" size="small" onClick={handleDownloadPDF}>
-              📥 Download PDF
-            </Button>
           </div>
 
-          {currentReportData && (
-            <div className="border border-gray-300 rounded-lg overflow-hidden">
-              <PDFViewer width="100%" height="600px">
-                <ReportPDFDocument
-                  reportData={currentReportData.data}
-                  reportType={currentReportData.type}
-                />
-              </PDFViewer>
-            </div>
-          )}
+          <div
+            ref={previewRef}
+            className="border border-gray-300 rounded-lg overflow-auto h-[600px] bg-white"
+          >
+            {/* Renderiza o HTML retornado pela IA */}
+            <div dangerouslySetInnerHTML={{ __html: aiHtml }} />
+          </div>
         </div>
       </Modal>
     </AppLayout>
