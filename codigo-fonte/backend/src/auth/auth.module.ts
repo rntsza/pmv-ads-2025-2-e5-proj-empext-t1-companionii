@@ -7,7 +7,7 @@ import { MailerModule } from '../mailer/mailer.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { GoogleStrategy } from './strategies/google.strategy';
+// import { GoogleStrategy } from './strategies/google.strategy'; // 1. IMPORTAÇÃO COMENTADA
 
 @Module({
   imports: [
@@ -30,7 +30,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, JwtStrategy /*, GoogleStrategy*/], // 2. USO COMENTADO
   exports: [AuthService],
 })
 export class AuthModule {}

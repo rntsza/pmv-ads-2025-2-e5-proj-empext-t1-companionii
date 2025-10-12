@@ -5,7 +5,8 @@ import {
   Navigate,
 } from 'react-router-dom';
 import { Suspense } from 'react';
-import ProtectedRoute from '../components/ProtectedRoute';
+// Não precisamos mais do ProtectedRoute por enquanto
+// import ProtectedRoute from '../components/ProtectedRoute'; 
 import { FullPageLoader, ToastContainer } from '../components/ui';
 import { LoginPage, RegisterPage, ForgotPasswordPage } from '../pages/auth';
 import GoogleCallbackPage from '../pages/auth/GoogleCallbackPage';
@@ -23,61 +24,22 @@ const AppRouter = () => {
       <div className="App">
         <Suspense fallback={<FullPageLoader message="Loading..." />}>
           <Routes>
-         
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
-      
-            <Route
-              path="/auth/google/callback"
-              element={<GoogleCallbackPage />}
-            />
+            {/* Rotas agora são públicas para desenvolvimento */}
+            <Route path="/dashboard" element={<HomePage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/kanban" element={<KanbanPage />} />
+            <Route path="/projects" element={<ProjectsPage />} />
 
-
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute>
-                  <ReportsPage />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/kanban"
-              element={
-                <ProtectedRoute>
-                  <KanbanPage />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/projects"
-              element={
-                <ProtectedRoute>
-                  <ProjectsPage />
-                </ProtectedRoute>
-              }
-            />
-
-
+            {/* Redirecionamento principal */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </Suspense>
-
-      
         <ToastContainer toasts={toasts} removeToast={removeToast} />
       </div>
     </Router>

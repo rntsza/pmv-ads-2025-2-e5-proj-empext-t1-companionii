@@ -1,7 +1,6 @@
-import {Header} from '../components/ui';
+import { Header } from '../components/ui';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigate } from 'react-router-dom';
-
 
 const AppLayout = ({ children, pageType = 'dashboard' }) => {
   const { user } = useAuthStore();
@@ -21,7 +20,8 @@ const AppLayout = ({ children, pageType = 'dashboard' }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    // A CORREÇÃO ESTÁ AQUI: trocamos bg-gray-50 por bg-white
+    <div className="min-h-screen bg-white"> 
       <Header type={pageType} user={user} onNavigate={handleNavigation} />
 
       <main className="flex-1">
