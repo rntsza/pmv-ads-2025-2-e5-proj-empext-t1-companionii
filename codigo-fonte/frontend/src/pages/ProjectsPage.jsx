@@ -3,26 +3,30 @@ import { AppLayout } from '../layouts';
 import { Button, Modal } from '../components/ui';
 import ProjectForm from '../components/projects/ProjectForm'; // Importando o formulário que já existe
 
-const initialProjects = [
-  { id: 1, name: 'Desenvolvimento do App Mobile', client: 'Empresa X', status: 'Em Progresso', description: 'App para iOS e Android.' },
-  { id: 2, name: 'Novo Website Institucional', client: 'Empresa Y', status: 'Concluído', description: 'Site com foco em SEO.' },
-  { id: 3, name: 'Campanha de Marketing Digital', client: 'Empresa Z', status: 'A Fazer', description: 'Campanha para o 4º trimestre.' },
-];
+// Iniciar com array vazio para mostrar o estado vazio
+const initialProjects = [];
 
 const ProjectStatCard = ({ title, value, subtitle, icon }) => (
-    <div className="card bg-white shadow-sm border border-gray-200 rounded-xl"><div className="card-body p-4"><div className="flex items-center gap-4"><div className="text-gray-400">{icon}</div><div><div className="text-xs text-gray-500">{title}</div><div className="text-xl font-bold text-gray-800">{value}</div><p className="text-xs text-gray-400">{subtitle}</p></div></div></div></div>
+    <div className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+        <div className="flex items-start justify-between mb-3">
+            <span className="text-sm font-medium text-gray-600">{title}</span>
+            <div className="text-gray-400">{icon}</div>
+        </div>
+        <div className="space-y-1">
+            <div className="text-2xl font-bold text-gray-900">{value}</div>
+            <p className="text-xs text-gray-500">{subtitle}</p>
+        </div>
+    </div>
 );
 
 const ProjectsPage = () => {
-    // Estado para o modal de Criar/Editar
+   
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [projectToEdit, setProjectToEdit] = useState(null);
-
-    // Estado para o modal de Deletar
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [projectToDelete, setProjectToDelete] = useState(null);
 
-    // Funções para o modal de Criar/Editar
+   
     const openCreateModal = () => {
         setProjectToEdit(null);
         setIsFormModalOpen(true);
@@ -58,54 +62,118 @@ const ProjectsPage = () => {
         closeDeleteModal();
     };
 
-    const folderIcon = <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>;
-    const usersIcon = <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>;
-    const clipboardIcon = <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>;
-    const clockIcon = <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>;
-    const chartIcon = <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>;
+    const folderIcon = <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>;
+    const usersIcon = <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>;
+    const clipboardIcon = <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>;
+    const clockIcon = <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>;
+    const chartIcon = <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>;
 
     return (
         <AppLayout pageType="projects">
             <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
 
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold">Gestão de Projetos</h1>
-                    <p className="text-sm text-gray-500">sábado, 11 de outubro</p>
-                </div>
+        
 
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-                    <ProjectStatCard icon={folderIcon} title="Total de Projetos" value="3" subtitle="3 ativos" />
-                    <ProjectStatCard icon={usersIcon} title="Clientes" value="3" subtitle="Clientes únicos" />
-                    <ProjectStatCard icon={clipboardIcon} title="Tarefas" value="0/0" subtitle={<progress className="progress w-full" value="0" max="100"></progress>} />
+                    <ProjectStatCard icon={folderIcon} title="Total de Projetos" value="0" subtitle="0 ativos" />
+                    <ProjectStatCard icon={usersIcon} title="Clientes" value="0" subtitle="Clientes únicos" />
+                    <ProjectStatCard icon={clipboardIcon} title="Tarefas" value="0/0" subtitle="" />
                     <ProjectStatCard icon={clockIcon} title="Horas Trabalhadas" value="0.0h" subtitle="Total registrado" />
                     <ProjectStatCard icon={chartIcon} title="Progresso Médio" value="0%" subtitle="Conclusão geral" />
                 </div>
 
-                <div className="bg-white p-3 rounded-xl flex justify-between items-center mb-6 shadow-sm border border-gray-200">
-                    <div className="flex items-center gap-4">
-                        <input type="text" placeholder="Buscar projetos..." className="input input-bordered bg-gray-100 w-64" />
-                        <select className="select select-bordered bg-gray-100 w-full max-w-xs"><option>Todos os clientes</option></select>
-                        <select className="select select-bordered bg-gray-100 w-full max-w-xs"><option>Mais recentes</option></select>
+                <div className="flex items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-3 flex-1">
+                        <div className="relative flex-1 max-w-xs">
+                            <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder="Buscar projetos..."
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                            />
+                        </div>
+                        <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
+                            <span className="text-sm font-medium text-gray-700">Todos os clientes</span>
+                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <select className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent appearance-none bg-white text-sm font-medium text-gray-700 pr-10">
+                            <option>Mais recentes</option>
+                            <option>Mais antigos</option>
+                            <option>A-Z</option>
+                            <option>Z-A</option>
+                        </select>
                     </div>
-                    <Button variant="primary" onClick={openCreateModal}>
+                    <Button variant="primary" onClick={openCreateModal} className="whitespace-nowrap">
                         + Novo Projeto
                     </Button>
                 </div>
 
-                <div className="card bg-white shadow-sm border border-gray-200 rounded-xl">
-                    <div className="card-body">
+                {initialProjects.length === 0 ? (
+                    <div className="bg-white border border-gray-200 rounded-xl p-16">
+                        <div className="flex flex-col items-center justify-center text-center">
+                            <div className="w-20 h-20 mb-6 text-gray-400">
+                                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum projeto criado</h3>
+                            <p className="text-gray-500 mb-6 max-w-md">
+                                Comece criando seu primeiro projeto para organizar suas tarefas
+                            </p>
+                            <Button variant="primary" onClick={openCreateModal}>
+                                + Criar Primeiro Projeto
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="table w-full">
-                                <thead><tr><th>Nome do Projeto</th><th>Cliente</th><th>Status</th><th className="text-right">Ações</th></tr></thead>
-                                <tbody>
+                            <table className="w-full">
+                                <thead className="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome do Projeto</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
                                     {initialProjects.map((project) => (
-                                        <tr key={project.id} className="hover">
-                                            <td><div className="font-bold">{project.name}</div></td>
-                                            <td>{project.client}</td>
-                                            <td><span className="badge badge-ghost badge-sm">{project.status}</span></td>
-                                            <td className="text-right">
-                                                <Button variant="ghost" size="small" onClick={() => openEditModal(project)}>Editar</Button>
-                                                <Button variant="ghost" size="small" className="text-red-500" onClick={() => openDeleteModal(project)}>Deletar</Button>
+                                        <tr key={project.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="font-medium text-gray-900">{project.name}</div>
+                                                <div className="text-sm text-gray-500">{project.description}</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{project.client}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                                    project.status === 'Concluído' ? 'bg-green-100 text-green-800' :
+                                                    project.status === 'Em Progresso' ? 'bg-blue-100 text-blue-800' :
+                                                    'bg-gray-100 text-gray-800'
+                                                }`}>
+                                                    {project.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button
+                                                    onClick={() => openEditModal(project)}
+                                                    className="text-blue-600 hover:text-blue-900 mr-4"
+                                                >
+                                                    Editar
+                                                </button>
+                                                <button
+                                                    onClick={() => openDeleteModal(project)}
+                                                    className="text-red-600 hover:text-red-900"
+                                                >
+                                                    Deletar
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -113,7 +181,7 @@ const ProjectsPage = () => {
                             </table>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* MODAL PARA CRIAR/EDITAR */}
                 <Modal

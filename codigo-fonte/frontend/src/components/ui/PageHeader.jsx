@@ -1,5 +1,7 @@
 import { forwardRef } from 'react';
 import PropTypes from 'prop-types';
+import { useAuthStore } from '../../stores/authStore';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * PageHeader - Componente de cabeçalho dinâmico para páginas da aplicação
@@ -11,6 +13,18 @@ import PropTypes from 'prop-types';
  */
 const PageHeader = forwardRef(
   ({ type = 'dashboard', user, onNavigate, className = '' }, ref) => {
+    const navigate = useNavigate();
+    const { logout } = useAuthStore();
+
+    const handleLogout = async () => {
+      try {
+        await logout();
+        navigate('/login');
+      } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+      }
+    };
+
     // Configurações para cada tipo de página
     const headerConfigs = {
       dashboard: {
@@ -124,7 +138,7 @@ const PageHeader = forwardRef(
         ref={ref}
         className={`bg-white border-b border-gray-200 ${className}`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Lado esquerdo - Icon + Title + Subtitle */}
             <div className="flex items-center gap-4">
@@ -133,7 +147,7 @@ const PageHeader = forwardRef(
               </div>
               <div>
                 <h1 className="text-heading-4 text-black">{config.title}</h1>
-                <p className="text-body-small text-secondary">
+                <p className="text-body-small text-gray-600">
                   {config.subtitle}
                 </p>
               </div>
@@ -156,7 +170,7 @@ const PageHeader = forwardRef(
                 ))}
               </nav>
 
-              {/* User Avatar */}
+              {/* User Avatar and Logout */}
               {user && (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center">
@@ -173,9 +187,10 @@ const PageHeader = forwardRef(
                     )}
                   </div>
                   <button
-                    className="text-gray-700 hover:text-black transition-colors cursor-pointer"
-                    aria-label="Menu do usuário"
-                    title="Desativado por enquanto"
+                    onClick={handleLogout}
+                    className="text-gray-700 hover:text-red-600 transition-colors cursor-pointer group"
+                    aria-label="Sair"
+                    title="Sair"
                   >
                     <svg
                       className="w-5 h-5"
@@ -187,7 +202,7 @@ const PageHeader = forwardRef(
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M9 5l7 7-7 7"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                       />
                     </svg>
                   </button>
