@@ -5,10 +5,9 @@ import {
   Navigate,
 } from 'react-router-dom';
 import { Suspense } from 'react';
-// Não precisamos mais do ProtectedRoute por enquanto
-// import ProtectedRoute from '../components/ProtectedRoute'; 
+import ProtectedRoute from '../components/ProtectedRoute';
 import { FullPageLoader, ToastContainer } from '../components/ui';
-import { LoginPage, RegisterPage, ForgotPasswordPage } from '../pages/auth';
+import { LoginPage, RegisterPage, ForgotPasswordPage, ChangePasswordPage } from '../pages/auth';
 import GoogleCallbackPage from '../pages/auth/GoogleCallbackPage';
 import HomePage from '../pages/HomePage';
 import ReportsPage from '../pages/ReportsPage';
@@ -27,13 +26,14 @@ const AppRouter = () => {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/change-password" element={<ChangePasswordPage />} />
             <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
-            {/* Rotas agora são públicas para desenvolvimento */}
-            <Route path="/dashboard" element={<HomePage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/kanban" element={<KanbanPage />} />
-            <Route path="/projects" element={<ProjectsPage />} />
+            {/* Rotas protegidas */}
+            <Route path="/dashboard" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
+            <Route path="/kanban" element={<ProtectedRoute><KanbanPage /></ProtectedRoute>} />
+            <Route path="/projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
 
             {/* Redirecionamento principal */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
