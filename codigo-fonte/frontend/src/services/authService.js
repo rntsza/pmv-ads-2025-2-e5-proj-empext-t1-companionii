@@ -100,26 +100,6 @@ export const authService = {
     }
   },
 
-  // Resend verification email
-  resendVerification: async email => {
-    try {
-      const response = await api.post('/auth/resend-verification', { email });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-    }
-  },
-
-  // Verify email with token
-  verifyEmail: async token => {
-    try {
-      const response = await api.post('/auth/verify-email', { token });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-    }
-  },
-
   // Update user profile
   updateProfile: async profileData => {
     try {

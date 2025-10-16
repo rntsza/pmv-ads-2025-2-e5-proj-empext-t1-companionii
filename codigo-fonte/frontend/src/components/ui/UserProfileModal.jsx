@@ -82,10 +82,12 @@ const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
     setIsLoading(true);
     try {
       await onSave(formData);
+      toast.success('Perfil atualizado com sucesso!');
       setIsEditing(false);
       onClose();
     } catch (error) {
       console.error('Erro ao salvar perfil:', error);
+      toast.error('Erro ao salvar perfil. Tente novamente.');
       setErrors({
         submit: error.message || 'Erro ao salvar perfil. Tente novamente.',
       });
