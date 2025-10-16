@@ -135,7 +135,7 @@ const PageHeader = forwardRef(
       }
     };
 
-    const handleProfileSave = async (profileData) => {
+    const handleProfileSave = async profileData => {
       // eslint-disable-next-line no-useless-catch
       try {
         await updateUser(profileData);
@@ -191,9 +191,9 @@ const PageHeader = forwardRef(
                       aria-label="Abrir perfil"
                       title="Ver perfil"
                     >
-                      {user.avatar ? (
+                      {user.imageUrl ? (
                         <img
-                          src={user.avatar}
+                          src={user.imageUrl}
                           alt={user.name}
                           className="w-full h-full rounded-full object-cover"
                         />
@@ -203,30 +203,29 @@ const PageHeader = forwardRef(
                         </span>
                       )}
                     </button>
-                   
                   </div>
                 )}
 
-                 <button
-                      onClick={handleLogout}
-                      className="text-gray-700 hover:text-red-600 transition-colors cursor-pointer group"
-                      aria-label="Sair"
-                      title="Sair"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                        />
-                      </svg>
-                    </button>
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-700 hover:text-red-600 transition-colors cursor-pointer group"
+                  aria-label="Sair"
+                  title="Sair"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>

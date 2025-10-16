@@ -67,25 +67,17 @@ const useAuthStore = create(
 
       logout: async () => {
         set({ isLoading: true });
-        try {
-          // Optionally call logout endpoint to invalidate token on server
-          await authService.logout(get().token);
-        } catch (error) {
-          // Log error but don't prevent logout
-          console.error('Logout error:', error);
-        } finally {
-          set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            isLoading: false,
-            loginAttempts: 0,
-            lastLoginAttempt: null,
-          });
-        }
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+          loginAttempts: 0,
+          lastLoginAttempt: null,
+        });
       },
 
-      updateUser: async (profileData) => {
+      updateUser: async profileData => {
         set({ isLoading: true });
         try {
           const updatedUser = await authService.updateProfile(profileData);

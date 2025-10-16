@@ -15,7 +15,6 @@ const ForgotPasswordForm = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    setError,
   } = useForm({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
@@ -35,13 +34,6 @@ const ForgotPasswordForm = () => {
 
       // Handle specific error cases
       if (
-        error.message.includes('not found') ||
-        error.message.includes('404')
-      ) {
-        setError('email', {
-          message: 'Nenhuma conta encontrada com este endereço de email',
-        });
-      } else if (
         error.message.includes('too many requests') ||
         error.message.includes('429')
       ) {

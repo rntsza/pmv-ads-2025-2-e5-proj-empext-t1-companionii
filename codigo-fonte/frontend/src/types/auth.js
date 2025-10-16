@@ -47,10 +47,9 @@ export const forgotPasswordSchema = z.object({
     .email('Digite um endereço de email válido'),
 });
 
-export const resetPasswordSchema = z
+export const changePasswordSchema = z
   .object({
-    token: z.string().min(1, 'Reset token is required'),
-    password: z
+    newPassword: z
       .string()
       .min(1, 'Senha é obrigatória')
       .min(8, 'Senha deve ter pelo menos 8 caracteres')
@@ -58,7 +57,7 @@ export const resetPasswordSchema = z
       .regex(/[0-9]/, 'Senha deve conter pelo menos um número'),
     confirmPassword: z.string().min(1, 'Confirme sua senha'),
   })
-  .refine(data => data.password === data.confirmPassword, {
+  .refine(data => data.newPassword === data.confirmPassword, {
     message: 'Senhas não coincidem',
     path: ['confirmPassword'],
   });

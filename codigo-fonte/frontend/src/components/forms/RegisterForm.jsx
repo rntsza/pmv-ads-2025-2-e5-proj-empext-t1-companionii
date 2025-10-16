@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, Checkbox } from '../ui';
 import { registerSchema, checkPasswordStrength } from '../../types/auth';
 import { useAuthStore } from '../../stores/authStore';
 import { useToast } from '../../hooks/useToast';
 
 const RegisterForm = () => {
-
   const navigate = useNavigate();
   const { register: registerUser, isLoading } = useAuthStore();
   const { toast } = useToast();
@@ -32,7 +31,6 @@ const RegisterForm = () => {
 
   const password = watch('password');
 
-
   const passwordStrength = useMemo(() => {
     if (!password) return null;
     return checkPasswordStrength(password);
@@ -51,7 +49,6 @@ const RegisterForm = () => {
     } catch (error) {
       console.error('Registration error:', error);
 
-  
       if (
         error.message.includes('already exists') ||
         error.message.includes('409')
@@ -121,7 +118,6 @@ const RegisterForm = () => {
         data-testid="email-input"
       />
 
-  
       <div>
         <Input
           label="Senha"
@@ -134,7 +130,6 @@ const RegisterForm = () => {
           data-testid="password-input"
         />
 
-     
         {password && passwordStrength && (
           <div className="mt-2">
             <div className="flex items-center space-x-2 mb-1">
@@ -165,7 +160,6 @@ const RegisterForm = () => {
         )}
       </div>
 
-   
       <Input
         label="Confirmar senha"
         type="password"
@@ -176,7 +170,6 @@ const RegisterForm = () => {
         data-testid="confirm-password-input"
       />
 
-  
       <Checkbox
         label={
           <span>
@@ -201,7 +194,6 @@ const RegisterForm = () => {
         data-testid="terms-checkbox"
       />
 
-   
       <Button
         type="submit"
         className="w-full"
@@ -211,7 +203,6 @@ const RegisterForm = () => {
         {isSubmitting || isLoading ? 'Criando conta...' : 'Criar conta'}
       </Button>
 
- 
       <div className="text-center">
         <span className="text-body-medium text-gray-600">
           Já tem uma conta?{' '}

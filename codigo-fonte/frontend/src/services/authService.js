@@ -121,7 +121,7 @@ export const authService = {
   },
 
   // Update user profile
-  updateProfile: async (profileData) => {
+  updateProfile: async profileData => {
     try {
       // Map avatar to imageUrl for backend compatibility
       const backendData = {
@@ -141,11 +141,11 @@ export const authService = {
   },
 
   // Change password
-  changePassword: async (currentPassword, newPassword) => {
+  changePassword: async (password, token) => {
     try {
-      const response = await api.patch('/users/change-password', {
-        currentPassword,
-        newPassword,
+      const response = await api.post('/auth/reset-password', {
+        password,
+        token,
       });
       return response.data;
     } catch (error) {

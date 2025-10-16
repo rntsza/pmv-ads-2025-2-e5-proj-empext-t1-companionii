@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../stores/authStore';
+import { useToast } from '../../hooks/useToast';
 import Modal from './Modal';
 import Input from './Input';
 import Button from './Button';
@@ -15,15 +16,16 @@ import Button from './Button';
  * @param {Function} props.onSave - Callback ao salvar alterações
  */
 const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
-  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    avatar: user?.avatar || '',
+    avatar: user?.imageUrl || '',
   });
   const [errors, setErrors] = useState({});
+  const { forgotPassword, isLoading: forgotPasswordIsLoading } = useAuthStore();
+  const { toast } = useToast();
 
   // Atualiza formData quando user muda
   useEffect(() => {
@@ -31,12 +33,12 @@ const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        avatar: user.avatar || '',
+        avatar: user.imageUrl || '',
       });
     }
   }, [user]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -85,7 +87,7 @@ const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
     } catch (error) {
       console.error('Erro ao salvar perfil:', error);
       setErrors({
-        submit: error.message || 'Erro ao salvar perfil. Tente novamente.'
+        submit: error.message || 'Erro ao salvar perfil. Tente novamente.',
       });
     } finally {
       setIsLoading(false);
@@ -97,7 +99,7 @@ const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
     setFormData({
       name: user?.name || '',
       email: user?.email || '',
-      avatar: user?.avatar || '',
+      avatar: user?.imageUrl || '',
     });
     setErrors({});
     setIsEditing(false);
@@ -108,12 +110,15 @@ const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
     onClose();
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     onClose();
-    navigate('/change-password');
+    await forgotPassword(user.email);
+    toast.info(
+      'Instruções para redefinir a senha foram enviadas para seu email.',
+    );
   };
 
-  const getInitials = (name) => {
+  const getInitials = name => {
     if (!name) return '?';
     const parts = name.trim().split(' ');
     if (parts.length === 1) {
@@ -123,7 +128,12 @@ const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Perfil do Usuário" size="small">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Perfil do Usuário"
+      size="small"
+    >
       <div className="space-y-6">
         {/* Avatar Preview */}
         <div className="flex flex-col items-center gap-4">
@@ -133,7 +143,7 @@ const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
                 src={formData.avatar}
                 alt={formData.name}
                 className="w-full h-full object-cover"
-                onError={(e) => {
+                onError={e => {
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'flex';
                 }}
@@ -204,9 +214,10 @@ const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
             <Button
               variant="outline"
               onClick={handleChangePassword}
+              loading={forgotPasswordIsLoading}
               className="w-full"
             >
-              Alterar Senha
+              {forgotPasswordIsLoading ? 'Enviando...' : 'Redefinir senha'}
             </Button>
           </div>
         )}
