@@ -42,6 +42,7 @@ export class AuthController {
       id: validatedUser.id,
       name: validatedUser.name,
       imageUrl: validatedUser.imageUrl,
+      email: validatedUser.email,
     };
     return { user, token: token.access_token };
   }
@@ -110,6 +111,7 @@ export class AuthController {
       id: user.id,
       name: user.name,
       imageUrl: user.imageUrl,
+      email: user.email,
     };
     return finalUser;
   }

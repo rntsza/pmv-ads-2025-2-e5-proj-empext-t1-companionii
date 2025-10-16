@@ -100,28 +100,8 @@ export const authService = {
     }
   },
 
-  // Resend verification email
-  resendVerification: async email => {
-    try {
-      const response = await api.post('/auth/resend-verification', { email });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-    }
-  },
-
-  // Verify email with token
-  verifyEmail: async token => {
-    try {
-      const response = await api.post('/auth/verify-email', { token });
-      return response.data;
-    } catch (error) {
-      handleApiError(error);
-    }
-  },
-
   // Update user profile
-  updateProfile: async (profileData) => {
+  updateProfile: async profileData => {
     try {
       // Map avatar to imageUrl for backend compatibility
       const backendData = {
@@ -141,11 +121,11 @@ export const authService = {
   },
 
   // Change password
-  changePassword: async (currentPassword, newPassword) => {
+  changePassword: async (password, token) => {
     try {
-      const response = await api.patch('/users/change-password', {
-        currentPassword,
-        newPassword,
+      const response = await api.post('/auth/reset-password', {
+        password,
+        token,
       });
       return response.data;
     } catch (error) {
