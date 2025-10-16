@@ -1,7 +1,8 @@
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useAuthStore } from '../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
+import UserProfileModal from './UserProfileModal';
 
 /**
  * PageHeader - Componente de cabeçalho dinâmico para páginas da aplicação
@@ -14,7 +15,8 @@ import { useNavigate } from 'react-router-dom';
 const PageHeader = forwardRef(
   ({ type = 'dashboard', user, onNavigate, className = '' }, ref) => {
     const navigate = useNavigate();
-    const { logout } = useAuthStore();
+    const { logout, updateUser } = useAuthStore();
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
     const handleLogout = async () => {
       try {
@@ -133,85 +135,111 @@ const PageHeader = forwardRef(
       }
     };
 
+    const handleProfileSave = async (profileData) => {
+      // eslint-disable-next-line no-useless-catch
+      try {
+        await updateUser(profileData);
+      } catch (error) {
+        throw error;
+      }
+    };
+
     return (
-      <header
-        ref={ref}
-        className={`bg-white border-b border-gray-200 ${className}`}
-      >
-        <div className="mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            {/* Lado esquerdo - Icon + Title + Subtitle */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-12 h-12 bg-black text-white rounded-xl">
-                {config.icon}
-              </div>
-              <div>
-                <h1 className="text-heading-4 text-black">{config.title}</h1>
-                <p className="text-body-small text-gray-600">
-                  {config.subtitle}
-                </p>
-              </div>
-            </div>
-
-            {/* Lado direito - Navigation + User */}
-            <div className="flex items-center gap-6">
-              {/* Navigation */}
-              <nav className="hidden md:flex items-center gap-1">
-                {config.navigation.map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavigation(item.id)}
-                    className="flex items-center gap-2 px-4 py-2 text-body-medium text-gray-700 hover:text-black hover:bg-gray-50 rounded-lg transition-colors duration-200 cursor-pointer"
-                    aria-label={`Navegar para ${item.label}`}
-                  >
-                    <NavigationIcon type={item.icon} />
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </nav>
-
-              {/* User Avatar and Logout */}
-              {user && (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center">
-                    {user.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-white text-sm font-medium">
-                        {getInitials(user.name)}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="text-gray-700 hover:text-red-600 transition-colors cursor-pointer group"
-                    aria-label="Sair"
-                    title="Sair"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                      />
-                    </svg>
-                  </button>
+      <>
+        <header
+          ref={ref}
+          className={`bg-white border-b border-gray-200 ${className}`}
+        >
+          <div className="mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-20">
+              {/* Lado esquerdo - Icon + Title + Subtitle */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 bg-black text-white rounded-xl">
+                  {config.icon}
                 </div>
-              )}
+                <div>
+                  <h1 className="text-heading-4 text-black">{config.title}</h1>
+                  <p className="text-body-small text-gray-600">
+                    {config.subtitle}
+                  </p>
+                </div>
+              </div>
+
+              {/* Lado direito - Navigation + User */}
+              <div className="flex items-center gap-6">
+                {/* Navigation */}
+                <nav className="hidden md:flex items-center gap-1">
+                  {config.navigation.map(item => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNavigation(item.id)}
+                      className="flex items-center gap-2 px-4 py-2 text-body-medium text-gray-700 hover:text-black hover:bg-gray-50 rounded-lg transition-colors duration-200 cursor-pointer"
+                      aria-label={`Navegar para ${item.label}`}
+                    >
+                      <NavigationIcon type={item.icon} />
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </nav>
+
+                {/* User Avatar and Logout */}
+                {user && (
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setIsProfileModalOpen(true)}
+                      className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center hover:ring-2 hover:ring-gray-400 transition-all cursor-pointer"
+                      aria-label="Abrir perfil"
+                      title="Ver perfil"
+                    >
+                      {user.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-white text-sm font-medium">
+                          {getInitials(user.name)}
+                        </span>
+                      )}
+                    </button>
+                   
+                  </div>
+                )}
+
+                 <button
+                      onClick={handleLogout}
+                      className="text-gray-700 hover:text-red-600 transition-colors cursor-pointer group"
+                      aria-label="Sair"
+                      title="Sair"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
+                      </svg>
+                    </button>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+
+        {/* User Profile Modal */}
+        <UserProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          user={user}
+          onSave={handleProfileSave}
+        />
+      </>
     );
   },
 );

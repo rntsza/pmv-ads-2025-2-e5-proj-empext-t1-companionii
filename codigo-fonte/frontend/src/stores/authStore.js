@@ -85,6 +85,21 @@ const useAuthStore = create(
         }
       },
 
+      updateUser: async (profileData) => {
+        set({ isLoading: true });
+        try {
+          const updatedUser = await authService.updateProfile(profileData);
+          set({
+            user: updatedUser,
+            isLoading: false,
+          });
+          return { success: true, user: updatedUser };
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
       // TODO: sem refresh token por enquanto
       // refreshToken: async () => {
       //   const { refreshToken: currentRefreshToken } = get();

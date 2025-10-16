@@ -119,4 +119,37 @@ export const authService = {
       handleApiError(error);
     }
   },
+
+  // Update user profile
+  updateProfile: async (profileData) => {
+    try {
+      // Map avatar to imageUrl for backend compatibility
+      const backendData = {
+        name: profileData.name,
+        email: profileData.email,
+        imageUrl: profileData.avatar,
+      };
+      const response = await api.patch('/users/profile', backendData);
+      // Map imageUrl back to avatar for frontend
+      return {
+        ...response.data,
+        avatar: response.data.imageUrl,
+      };
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
+
+  // Change password
+  changePassword: async (currentPassword, newPassword) => {
+    try {
+      const response = await api.patch('/users/change-password', {
+        currentPassword,
+        newPassword,
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
 };
