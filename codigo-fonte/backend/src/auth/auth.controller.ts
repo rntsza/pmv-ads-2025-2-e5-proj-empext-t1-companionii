@@ -30,6 +30,7 @@ export class AuthController {
   ) {}
 
   @Post('login')
+  @UseGuards(ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
     const validatedUser = await this.auth.validate(dto.email, dto.password);
@@ -55,12 +56,15 @@ export class AuthController {
   }
 
   @Post('reset-password')
+  @UseGuards(ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
   async reset(@Body() dto: ResetPasswordDto) {
     return await this.auth.resetPassword(dto.token, dto.password);
   }
 
   @Post('accept-invite')
   @UseGuards(ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
   async acceptInvite(@Body() dto: AcceptInviteDto, @Res() res: Response) {
     const token = await this.auth.acceptInvite(
       dto.token,

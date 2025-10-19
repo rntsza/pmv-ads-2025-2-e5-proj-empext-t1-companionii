@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -9,8 +9,16 @@ export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateProjectDto, createdById: string) {
+    const companyId = await this.ensureCompanyId(dto, createdById);
+
     return await this.prisma.project.create({
-      data: { ...dto, createdById: createdById },
+      data: {
+        name: dto.name,
+        description: dto.description,
+        colorHex: dto.colorHex,
+        companyId,
+        createdById,
+      },
     });
   }
 
@@ -61,6 +69,22 @@ export class ProjectsService {
     });
   }
 
+  async listTags(projectId: string, opts?: { q?: string; take?: number }) {
+    const where = {
+      projectId,
+      ...(opts?.q
+        ? { name: { contains: opts.q, mode: 'insensitive' as const } }
+        : {}),
+    };
+
+    return this.prisma.tag.findMany({
+      where,
+      select: { id: true, name: true, colorHex: true, createdAt: true },
+      orderBy: [{ name: 'asc' }],
+      take: opts?.take ?? 20,
+    });
+  }
+
   async update(id: string, dto: UpdateProjectDto) {
     return await this.prisma.project.update({ where: { id }, data: dto });
   }
@@ -89,5 +113,32 @@ export class ProjectsService {
       progress: total ? Math.round((done / total) * 100) : 0,
       byStatus,
     };
+  }
+
+  private async ensureCompanyId(dto: CreateProjectDto, createdById: string) {
+    if (dto.companyId) return dto.companyId;
+
+    if (dto.clientName) {
+      const existing = await this.prisma.company.findFirst({
+        where: { name: dto.clientName },
+        select: { id: true },
+      });
+
+      if (existing) return existing.id;
+
+      const created = await this.prisma.company.create({
+        data: {
+          name: dto.clientName,
+          owner: { connect: { id: createdById } },
+        },
+        select: { id: true },
+      });
+
+      return created.id;
+    }
+
+    throw new BadRequestException(
+      'Provide companyId or clientName to associate the project with a company.',
+    );
   }
 }
