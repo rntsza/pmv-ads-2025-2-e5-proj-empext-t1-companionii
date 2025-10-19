@@ -40,7 +40,7 @@ export default {
   globals: {
     'import.meta': {
       env: {
-        VITE_API_URL: 'http://localhost:3000',
+        VITE_API_URL: 'https://companion-backend.fly.dev/docs',
       },
     },
   },
