@@ -6,7 +6,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -16,7 +15,7 @@ export class CreateTaskDto {
     description: 'ID do projeto ao qual a tarefa pertence',
     example: 'b3e1a7c2-8f1e-4e2a-9c2b-123456789abc',
   })
-  @IsUUID()
+  @IsString()
   projectId: string;
 
   @ApiProperty({

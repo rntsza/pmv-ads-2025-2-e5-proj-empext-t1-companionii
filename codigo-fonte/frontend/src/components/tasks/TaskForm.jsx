@@ -1,75 +1,132 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Button } from '../ui';
+import { projectsService } from '../../services/projectsService';
 
 const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
+  const [projects, setProjects] = useState([]);
+  const [tagInput, setTagInput] = useState('');
+  const [availableTags, setAvailableTags] = useState([]);
+  const [showTagMenu, setShowTagMenu] = useState(false);
+  const tagMenuRef = useRef(null);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    project: '',
+    projectId: '',
     status: 'todo',
     priority: 'medium',
     dueDate: '',
     estimatedHours: '',
     actualHours: '',
-    isRecurring: false,
     tags: [],
   });
+
+  const normalized = s => s.toLowerCase().trim();
+
+  const existingNames = availableTags.map(t => t.name);
+  const filteredSuggestions = availableTags
+    .filter(t => normalized(t.name).includes(normalized(tagInput)))
+    .slice(0, 10);
+
+  const handleChange = e => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+      ...(name === 'projectId' ? { tags: [] } : {}),
+    }));
+  };
+
+  const addTag = name => {
+    if (!name) return;
+    const clean = name.trim();
+    if (!clean) return;
+    if (!formData.tags.includes(clean)) {
+      setFormData(prev => ({ ...prev, tags: [...prev.tags, clean] }));
+    }
+    setTagInput('');
+    setShowTagMenu(false);
+  };
+
+  const handleAddTag = () => addTag(tagInput);
+
+  const handleTagKeyDown = e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag(tagInput);
+    } else if (e.key === 'ArrowDown') {
+      setShowTagMenu(true);
+    }
+  };
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  const handleRemoveTag = tagToRemove => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove),
+    }));
+  };
+
+  useEffect(() => {
+    (async () => {
+      const list = await projectsService.listAllSelect();
+      setProjects((list || []).map(p => ({ id: p.id, name: p.name })));
+    })();
+  }, []);
 
   useEffect(() => {
     if (initialData) {
       setFormData({
         title: initialData.title || '',
         description: initialData.description || '',
-        project: initialData.project || '',
+        projectId: initialData.projectId || '',
         status: initialData.status || 'todo',
         priority: initialData.priority || 'medium',
         dueDate: initialData.dueDate || '',
         estimatedHours: initialData.estimatedHours || '',
         actualHours: initialData.actualHours || '',
-        isRecurring: initialData.isRecurring || false,
         tags: initialData.tags || [],
       });
     }
   }, [initialData]);
 
-  const [tagInput, setTagInput] = useState('');
+  useEffect(() => {
+    (async () => {
+      if (!formData.projectId) {
+        setAvailableTags([]);
+        return;
+      }
+      const tags = await projectsService.listTagsByProject(
+        formData.projectId,
+        '',
+      );
+      setAvailableTags(tags || []);
+    })();
+  }, [formData.projectId]);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
-
-  const handleAddTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()],
-      }));
-      setTagInput('');
-    }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
-
-  const handleRemoveTag = (tagToRemove) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove),
-    }));
-  };
+  useEffect(() => {
+    const onClickOutside = e => {
+      if (tagMenuRef.current && !tagMenuRef.current.contains(e.target)) {
+        setShowTagMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Título */}
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor="title"
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
           Título <span className="text-red-500">*</span>
         </label>
         <input
@@ -86,7 +143,10 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
 
       {/* Descrição */}
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor="description"
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
           Descrição
         </label>
         <textarea
@@ -103,24 +163,33 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
       {/* Projeto e Status */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="projectId"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Projeto <span className="text-red-500">*</span>
           </label>
           <select
-            id="project"
-            name="project"
-            value={formData.project}
+            id="projectId"
+            name="projectId"
+            value={formData.projectId}
             onChange={handleChange}
             required
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent appearance-none bg-white"
           >
             <option value="">Selecione um projeto</option>
-            <option value="puc">PUC</option>
-            <option value="devops">DevOps</option>
+            {projects.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
           </select>
         </div>
         <div>
-          <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="status"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Status
           </label>
           <select
@@ -141,7 +210,10 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
       {/* Prioridade e Data de Vencimento */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="priority"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Prioridade
           </label>
           <select
@@ -154,10 +226,14 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
             <option value="low">Baixa</option>
             <option value="medium">Média</option>
             <option value="high">Alta</option>
+            <option value="urgent">Urgente</option>
           </select>
         </div>
         <div>
-          <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="dueDate"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Data de Vencimento
           </label>
           <input
@@ -174,7 +250,10 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
       {/* Horas Estimadas e Reais */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="estimatedHours" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="estimatedHours"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Horas Estimadas
           </label>
           <input
@@ -190,7 +269,10 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
           />
         </div>
         <div>
-          <label htmlFor="actualHours" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="actualHours"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Horas Reais
           </label>
           <input
@@ -207,27 +289,12 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
         </div>
       </div>
 
-      {/* Tarefa Recorrente */}
-      <div className="flex items-center gap-3">
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            id="isRecurring"
-            name="isRecurring"
-            checked={formData.isRecurring}
-            onChange={handleChange}
-            className="sr-only peer"
-          />
-          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-black/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
-        </label>
-        <label htmlFor="isRecurring" className="text-sm font-medium text-gray-700 cursor-pointer">
-          Tarefa Recorrente
-        </label>
-      </div>
-
       {/* Tags */}
-      <div>
-        <label htmlFor="tagInput" className="block text-sm font-medium text-gray-700 mb-2">
+      <div ref={tagMenuRef} className="relative">
+        <label
+          htmlFor="tagInput"
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
           Tags
         </label>
         <div className="flex gap-2">
@@ -235,37 +302,80 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
             type="text"
             id="tagInput"
             value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleAddTag();
-              }
+            disabled={!formData.projectId}
+            onFocus={() => formData.projectId && setShowTagMenu(true)}
+            onChange={e => {
+              setTagInput(e.target.value);
+              setShowTagMenu(true);
             }}
-            placeholder="Digite uma tag"
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+            onKeyDown={handleTagKeyDown}
+            placeholder={
+              formData.projectId
+                ? 'Digite para buscar/criar...'
+                : 'Selecione um projeto primeiro'
+            }
+            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent disabled:bg-gray-100"
           />
           <button
             type="button"
             onClick={handleAddTag}
-            className="px-4 py-2.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+            disabled={!tagInput.trim() || !formData.projectId}
+            className="px-4 py-2.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
             aria-label="Adicionar tag"
           >
             +
           </button>
         </div>
+
+        {showTagMenu &&
+          formData.projectId &&
+          (filteredSuggestions.length > 0 || tagInput.trim()) && (
+            <div className="absolute z-20 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-auto">
+              {filteredSuggestions.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => addTag(t.name)}
+                  className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 cursor-pointer"
+                  title={t.name}
+                >
+                  <span
+                    className="inline-block h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: t.colorHex || '#22c55e' }}
+                  />
+                  <span className="text-sm text-gray-800">{t.name}</span>
+                </button>
+              ))}
+
+              {tagInput.trim() &&
+                !existingNames
+                  .map(normalized)
+                  .includes(normalized(tagInput)) && (
+                  <button
+                    type="button"
+                    onClick={() => addTag(tagInput)}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-50 border-t border-gray-100"
+                  >
+                    <span className="text-sm text-gray-700">
+                      Criar “{tagInput.trim()}”
+                    </span>
+                  </button>
+                )}
+            </div>
+          )}
+
         {formData.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             {formData.tags.map((tag, index) => (
               <span
-                key={index}
+                key={`${tag}-${index}`}
                 className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
               >
                 {tag}
                 <button
                   type="button"
                   onClick={() => handleRemoveTag(tag)}
-                  className="hover:text-red-600"
+                  className="hover:text-red-600 cursor-pointer"
                   aria-label={`Remover tag ${tag}`}
                 >
                   ×
@@ -292,18 +402,7 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
 TaskForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
-  initialData: PropTypes.shape({
-    title: PropTypes.string,
-    description: PropTypes.string,
-    project: PropTypes.string,
-    status: PropTypes.string,
-    priority: PropTypes.string,
-    dueDate: PropTypes.string,
-    estimatedHours: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    actualHours: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    isRecurring: PropTypes.bool,
-    tags: PropTypes.arrayOf(PropTypes.string),
-  }),
+  initialData: PropTypes.object,
 };
 
 export default TaskForm;

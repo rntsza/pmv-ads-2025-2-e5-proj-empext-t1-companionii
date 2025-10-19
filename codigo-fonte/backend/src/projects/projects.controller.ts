@@ -19,6 +19,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectFindAllQueryDto } from './dto/findall-project-query.dto';
+import { ProjectTagsQueryDto } from './dto/project-tags-query.dto';
 
 @ApiTags('projects')
 @ApiBearerAuth()
@@ -48,6 +49,18 @@ export class ProjectsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.projects.findOne(id);
+  }
+
+  @Get(':id/tags')
+  async listTags(
+    @Param('id') projectId: string,
+    @Query() query: ProjectTagsQueryDto,
+  ) {
+    const { q, take } = query;
+    return await this.projects.listTags(projectId, {
+      q,
+      take: take ? Number(take) : 20,
+    });
   }
 
   @Patch(':id')

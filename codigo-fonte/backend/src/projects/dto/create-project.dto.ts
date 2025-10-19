@@ -9,12 +9,21 @@ export class CreateProjectDto {
   @IsString()
   name: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'ID da empresa associada ao projeto',
     example: 'b3b8e2c4-5f6a-4c3a-9e2d-1a2b3c4d5e6f',
   })
   @IsUUID()
-  companyId: string;
+  @IsOptional()
+  companyId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Nome do cliente/empresa (caso não tenha o companyId)',
+    example: 'PUC Minas',
+  })
+  @IsOptional()
+  @IsString()
+  clientName?: string;
 
   @ApiPropertyOptional({
     description: 'Descrição do projeto',

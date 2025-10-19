@@ -13,4 +13,15 @@ export const dashboardsService = {
       handleApiError(err);
     }
   },
+  async home({ projectId, date }) {
+    try {
+      const scope = projectId ? 'project' : 'all';
+      const res = await api.get('/dashboard/home', {
+        params: { scope, projectId, date },
+      });
+      return res.data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
 };
