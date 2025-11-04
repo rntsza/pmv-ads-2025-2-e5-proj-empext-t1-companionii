@@ -1,14 +1,15 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { BoardStatus } from '@prisma/client';
 
 export class ListTasksQueryDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'ID do projeto',
     example: 'proj_123',
   })
   @IsString()
-  projectId!: string;
+  @IsOptional()
+  projectId?: string;
 
   @ApiPropertyOptional({
     description: 'Status do quadro',

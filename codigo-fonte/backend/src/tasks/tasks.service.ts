@@ -38,9 +38,14 @@ export class TasksService {
     });
   }
 
-  async list(filter: { projectId: string; status?: BoardStatus }) {
+  async list(filter: { projectId?: string; status?: BoardStatus }) {
+    const where: any = {};
+    if (filter.projectId && filter.projectId !== 'all')
+      where.projectId = filter.projectId;
+    if (filter.status) where.status = filter.status;
+
     return await this.prisma.task.findMany({
-      where: { projectId: filter.projectId, status: filter.status },
+      where,
       orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
       include: {
         tags: { include: { tag: true } },

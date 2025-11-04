@@ -36,7 +36,7 @@ export class TasksController {
   @Get()
   async findAll(@Query() q: ListTasksQueryDto) {
     const { projectId, status } = q;
-    return await this.tasks.list({ projectId, status: status });
+    return await this.tasks.list({ projectId, status });
   }
 
   @Patch(':id')
