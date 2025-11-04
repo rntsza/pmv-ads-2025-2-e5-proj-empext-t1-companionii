@@ -3,6 +3,47 @@ import PropTypes from 'prop-types';
 import { Button } from '../ui';
 import { projectsService } from '../../services/projectsService';
 
+const toDateInputValue = value => {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const normalizeStatusToUi = s => {
+  if (!s) return 'todo';
+  const map = {
+    TODO: 'todo',
+    IN_PROGRESS: 'in-progress',
+    REVIEW: 'review',
+    DONE: 'done',
+  };
+  return map[s] || s;
+};
+
+const normalizePriorityToUi = p => {
+  if (!p) return 'medium';
+  const set = new Set([
+    'low',
+    'medium',
+    'high',
+    'urgent',
+    'LOW',
+    'MEDIUM',
+    'HIGH',
+    'URGENT',
+  ]);
+  if (!set.has(p)) return 'medium';
+  return String(p).toLowerCase();
+};
+
+const toHours = minutes => {
+  return (minutes / 60).toFixed(0);
+};
+
 const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
   const [projects, setProjects] = useState([]);
   const [tagInput, setTagInput] = useState('');
@@ -18,12 +59,10 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
     priority: 'medium',
     dueDate: '',
     estimatedHours: '',
-    actualHours: '',
     tags: [],
   });
 
   const normalized = s => s.toLowerCase().trim();
-
   const existingNames = availableTags.map(t => t.name);
   const filteredSuggestions = availableTags
     .filter(t => normalized(t.name).includes(normalized(tagInput)))
@@ -42,9 +81,10 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
     if (!name) return;
     const clean = name.trim();
     if (!clean) return;
-    if (!formData.tags.includes(clean)) {
-      setFormData(prev => ({ ...prev, tags: [...prev.tags, clean] }));
-    }
+    setFormData(prev => {
+      if (prev.tags.includes(clean)) return prev;
+      return { ...prev, tags: [...prev.tags, clean] };
+    });
     setTagInput('');
     setShowTagMenu(false);
   };
@@ -62,7 +102,11 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
 
   const handleSubmit = e => {
     e.preventDefault();
-    onSubmit(formData);
+    if (initialData) {
+      onSubmit(initialData.id, formData);
+    } else {
+      onSubmit(formData);
+    }
   };
 
   const handleRemoveTag = tagToRemove => {
@@ -80,19 +124,32 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
   }, []);
 
   useEffect(() => {
-    if (initialData) {
-      setFormData({
-        title: initialData.title || '',
-        description: initialData.description || '',
-        projectId: initialData.projectId || '',
-        status: initialData.status || 'todo',
-        priority: initialData.priority || 'medium',
-        dueDate: initialData.dueDate || '',
-        estimatedHours: initialData.estimatedHours || '',
-        actualHours: initialData.actualHours || '',
-        tags: initialData.tags || [],
-      });
-    }
+    if (!initialData) return;
+    console.log({ initialData });
+
+    setFormData({
+      title: initialData.title || '',
+      description: initialData.description || '',
+      projectId: initialData.projectId || '',
+      status: normalizeStatusToUi(initialData.status) || 'todo',
+      priority: normalizePriorityToUi(initialData.priority) || 'medium',
+      dueDate:
+        typeof initialData.dueDate === 'string' &&
+        /^\d{4}-\d{2}-\d{2}$/.test(initialData.dueDate)
+          ? initialData.dueDate
+          : toDateInputValue(
+              initialData.dueDateRaw || initialData.dueDate || null,
+            ),
+      estimatedHours:
+        initialData.estimatedMin === 0 || initialData.estimatedMin
+          ? toHours(initialData.estimatedMin)
+          : '',
+      // actualHours:
+      //   initialData.actualMin === 0 || initialData.actualMin
+      //     ? toHours(initialData.actualMin)
+      //     : '',
+      tags: Array.isArray(initialData.tags) ? initialData.tags : [],
+    });
   }, [initialData]);
 
   useEffect(() => {
@@ -248,7 +305,7 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
       </div>
 
       {/* Horas Estimadas e Reais */}
-      <div className="grid grid-cols-2 gap-4">
+      <div>
         <div>
           <label
             htmlFor="estimatedHours"
@@ -262,13 +319,13 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
             name="estimatedHours"
             value={formData.estimatedHours}
             onChange={handleChange}
-            placeholder="Ex: 2.5"
+            placeholder="Ex: 3"
             step="0.5"
             min="0"
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
           />
         </div>
-        <div>
+        {/* <div>
           <label
             htmlFor="actualHours"
             className="block text-sm font-medium text-gray-700 mb-2"
@@ -286,7 +343,7 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
             min="0"
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
           />
-        </div>
+        </div> */}
       </div>
 
       {/* Tags */}
@@ -402,7 +459,7 @@ const TaskForm = ({ onSubmit, onCancel, initialData = null }) => {
 TaskForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
-  initialData: PropTypes.object,
+  initialData: PropTypes.object, // quando presente, preenche o form para edição
 };
 
 export default TaskForm;

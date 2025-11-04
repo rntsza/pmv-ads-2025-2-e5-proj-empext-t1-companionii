@@ -38,6 +38,20 @@ export class TasksService {
     });
   }
 
+  async findOne(id: string) {
+    const task = await this.prisma.task.findUnique({
+      where: { id },
+      include: {
+        tags: { include: { tag: true } },
+        project: {
+          select: { company: { select: { name: true, colorHex: true } } },
+        },
+      },
+    });
+    if (!task) throw new NotFoundException('Task not found');
+    return task;
+  }
+
   async list(filter: { projectId?: string; status?: BoardStatus }) {
     const where: any = {};
     if (filter.projectId && filter.projectId !== 'all')
@@ -60,7 +74,8 @@ export class TasksService {
     const before = await this.prisma.task.findUnique({ where: { id } });
     if (!before) throw new NotFoundException('Task not found');
 
-    const data: any = { ...dto };
+    const { tags, ...rest } = dto as UpdateTaskDto & { tags?: string[] };
+    const data: any = { ...rest };
 
     const statusWillChange = dto.status && dto.status !== before.status;
 
@@ -99,20 +114,39 @@ export class TasksService {
         data.completedAt = null;
       }
 
+      const targetStatus = rest.status!;
       const max = await this.prisma.task.aggregate({
-        where: { projectId: before.projectId, status: dto.status! },
+        where: { projectId: before.projectId, status: targetStatus },
         _max: { position: true },
       });
       data.position = (max._max.position ?? 0) + 1;
     }
 
-    return this.prisma.task.update({
+    if (rest.dueDate) data.dueDate = new Date(rest.dueDate);
+
+    await this.prisma.task.update({
       where: { id },
-      data: {
-        ...data,
-        ...(dto.dueDate ? { dueDate: new Date(dto.dueDate) } : {}),
+      data,
+      include: {
+        tags: { include: { tag: true } },
+        project: {
+          select: { company: { select: { name: true, colorHex: true } } },
+        },
       },
-      include: { tags: { include: { tag: true } } },
+    });
+
+    if (Array.isArray(tags)) {
+      await this.setTags(id, tags);
+    }
+
+    return this.prisma.task.findUnique({
+      where: { id },
+      include: {
+        tags: { include: { tag: true } },
+        project: {
+          select: { company: { select: { name: true, colorHex: true } } },
+        },
+      },
     });
   }
 

@@ -38,6 +38,10 @@ export class TasksController {
     const { projectId, status } = q;
     return await this.tasks.list({ projectId, status });
   }
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return await this.tasks.findOne(id);
+  }
 
   @Patch(':id')
   async update(@Param('id') id: string, @Body() dto: UpdateTaskDto) {

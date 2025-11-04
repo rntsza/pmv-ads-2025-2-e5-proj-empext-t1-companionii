@@ -15,6 +15,15 @@ const PRIORITY_MAP = {
 };
 
 export const tasksService = {
+  get: async id => {
+    try {
+      const res = await api.get(`/tasks/${id}`);
+      return res.data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
   list: async ({ projectId, status, q } = {}) => {
     try {
       const params = {};
@@ -55,6 +64,36 @@ export const tasksService = {
       };
 
       const res = await api.post('/tasks', payload);
+      return res.data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  update: async (id, form) => {
+    try {
+      const payload = {
+        title: form.title,
+        description: form.description || undefined,
+        projectId: form.projectId,
+        status: STATUS_MAP[form.status || 'todo'],
+        priority: PRIORITY_MAP[form.priority || 'medium'],
+        dueDate: form.dueDate || undefined,
+        estimatedMin: form.estimatedHours
+          ? Math.round(Number(form.estimatedHours) * 60)
+          : undefined,
+        tags: form.tags || [],
+      };
+      const res = await api.patch(`/tasks/${id}`, payload);
+      return res.data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  remove: async id => {
+    try {
+      const res = await api.delete(`/tasks/${id}`);
       return res.data;
     } catch (err) {
       handleApiError(err);

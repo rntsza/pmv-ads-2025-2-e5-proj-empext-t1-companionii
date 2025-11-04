@@ -74,6 +74,45 @@ const KanbanPage = () => {
     }
   };
 
+  const loadTasks = useCallback(async () => {
+    setLoading(true);
+    try {
+      const apiTasks = await tasksService.list({
+        projectId: filters.project,
+        status: filters.status,
+        q: filters.searchTerm || undefined,
+      });
+      const mapped = (apiTasks || []).map(t => ({
+        id: t.id,
+        title: t.title,
+        description: t.description,
+        status: mapApiStatusToUi(t.status),
+        date: t.createdAt
+          ? new Date(t.createdAt).toLocaleDateString('pt-BR', {
+              day: '2-digit',
+              month: 'short',
+            })
+          : t.dueDate
+            ? new Date(t.dueDate).toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: 'short',
+              })
+            : null,
+        projectId: t.projectId,
+        project: t.project?.name || t.project?.company?.name || '',
+        projectColor: t.project?.company?.colorHex || null,
+        priority: t.priority,
+        tags: (t.tags || []).map(x => x.tag?.name || x.name).filter(Boolean),
+      }));
+      setTasks(mapped);
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.message || 'Falha ao carregar tarefas');
+    } finally {
+      setLoading(false);
+    }
+  }, [filters.project, filters.status, filters.searchTerm]);
+
   const handleFilterChange = e => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
@@ -81,7 +120,7 @@ const KanbanPage = () => {
 
   const handleCreateTask = async taskData => {
     try {
-      const created = await tasksService.create({
+      await tasksService.create({
         title: taskData.title,
         description: taskData.description,
         projectId: taskData.projectId,
@@ -89,22 +128,9 @@ const KanbanPage = () => {
         priority: taskData.priority,
         dueDate: taskData.dueDate,
         estimatedHours: taskData.estimatedHours,
-        isRecurring: taskData.isRecurring,
         tags: taskData.tags,
       });
-      const uiTask = {
-        id: created.id,
-        title: created.title,
-        status: mapApiStatusToUi(created.status),
-        date: created.dueDate
-          ? new Date(created.dueDate).toLocaleDateString('pt-BR', {
-              day: '2-digit',
-              month: 'short',
-            })
-          : null,
-        project: created.project?.name ?? null,
-      };
-      setTasks(prev => [...prev, uiTask]);
+      await loadTasks();
       toast.success('Tarefa criada com sucesso!');
       setIsTaskModalOpen(false);
     } catch (err) {
@@ -117,20 +143,46 @@ const KanbanPage = () => {
     setIsTaskModalOpen(false);
   };
 
-  const handleTaskClick = task => {
-    setSelectedTask(task);
+  const handleTaskClick = async task => {
+    try {
+      const full = await tasksService.get(task.id);
+      const enriched = {
+        ...task,
+        description: full?.description ?? task.description,
+        project:
+          full?.project?.name || full?.project?.company?.name || task.project,
+        projectColor: full?.project?.company?.colorHex || task.projectColor,
+        priority: full?.priority || task.priority,
+        dueDateRaw: full?.dueDate,
+        tags: (full?.tags || [])
+          .map(x => x.tag?.name || x.name)
+          .filter(Boolean),
+        createdAtRaw: full?.createdAt,
+        completedAtRaw: full?.completedAt,
+        estimatedMin: full?.estimatedMin,
+        actualMin: full?.actualMin,
+      };
+      setSelectedTask(enriched);
+    } catch (err) {
+      console.error(err);
+      setSelectedTask(task);
+    }
   };
 
   const handleCloseTaskDetail = () => {
     setSelectedTask(null);
   };
 
-  const handleDeleteTask = () => {
-    if (selectedTask) {
-      setTasks(prevTasks =>
-        prevTasks.filter(task => task.id !== selectedTask.id),
-      );
+  const handleDeleteTask = async id => {
+    try {
+      await tasksService.remove(id);
+      await loadTasks();
+      toast.success('Tarefa excluída!');
+      setTaskToEdit(null);
       setSelectedTask(null);
+    } catch (err) {
+      console.error(err);
+      toast.error('Não foi possível excluir a tarefa.');
     }
   };
 
@@ -142,25 +194,26 @@ const KanbanPage = () => {
     }
   };
 
-  const handleUpdateTask = taskData => {
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === taskToEdit.id
-          ? {
-              ...task,
-              ...taskData,
-              date: taskData.dueDate
-                ? new Date(taskData.dueDate).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: 'short',
-                  })
-                : task.date,
-            }
-          : task,
-      ),
-    );
-    setIsEditModalOpen(false);
-    setTaskToEdit(null);
+  const handleUpdateTask = async (id, updates) => {
+    try {
+      await tasksService.update(id, {
+        title: updates.title,
+        description: updates.description,
+        projectId: updates.projectId,
+        status: updates.status,
+        priority: updates.priority,
+        dueDate: updates.dueDate,
+        estimatedHours: updates.estimatedHours,
+        tags: updates.tags,
+      });
+      await loadTasks();
+      toast.success('Tarefa atualizada!');
+      setTaskToEdit(null);
+      setSelectedTask(null);
+    } catch (err) {
+      console.error(err);
+      toast.error('Não foi possível atualizar a tarefa.');
+    }
   };
 
   const handleCloseEditModal = () => {
@@ -171,7 +224,6 @@ const KanbanPage = () => {
   const handleTaskMove = useCallback(
     async (taskId, to) => {
       if (!taskId || !to) return;
-      // otimista
       setTasks(prev => {
         const clone = [...prev];
         const idx = clone.findIndex(t => t.id === taskId);
@@ -179,60 +231,15 @@ const KanbanPage = () => {
         return clone;
       });
       try {
-        const updated = await tasksService.updateStatus(taskId, to);
-        setTasks(prev =>
-          prev.map(t =>
-            t.id === taskId
-              ? {
-                  ...t,
-                  status: mapApiStatusToUi(updated.status),
-                  // reidrata cor/label caso back retorne project novamente
-                  project:
-                    updated.project?.name ||
-                    updated.project?.company?.name ||
-                    t.project,
-                  projectColor:
-                    updated.project?.company?.colorHex || t.projectColor,
-                }
-              : t,
-          ),
-        );
+        await tasksService.updateStatus(taskId, to);
+        await loadTasks();
       } catch (err) {
         console.log(err);
         toast.error('Falha ao mover tarefa. Voltando ao estado anterior.');
-        // rollback
-        // sem "from" aqui; recarrega da API para garantir consistência
-        const api = await tasksService.list({
-          projectId: filters.project,
-          status: filters.status,
-          q: filters.searchTerm || undefined,
-        });
-        const mapped = (api || []).map(t => ({
-          id: t.id,
-          title: t.title,
-          description: t.description,
-          status: mapApiStatusToUi(t.status),
-          date: t.dueDate
-            ? new Date(t.dueDate).toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'short',
-              })
-            : t.createdAt
-              ? new Date(t.createdAt).toLocaleDateString('pt-BR', {
-                  day: '2-digit',
-                  month: 'short',
-                })
-              : null,
-          projectId: t.projectId,
-          project: t.project?.name || t.project?.company?.name || '',
-          projectColor: t.project?.company?.colorHex || null,
-          priority: t.priority,
-          tags: (t.tags || []).map(x => x.tag?.name || x.name).filter(Boolean),
-        }));
-        setTasks(mapped);
+        await loadTasks();
       }
     },
-    [filters.project, filters.status, filters.searchTerm],
+    [loadTasks],
   );
 
   const todoTasks = filteredTasks.filter(task => task.status === 'todo');
@@ -269,46 +276,8 @@ const KanbanPage = () => {
   }, []);
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const apiTasks = await tasksService.list({
-          projectId: filters.project,
-          status: filters.status,
-          q: filters.searchTerm || undefined,
-        });
-        const mapped = (apiTasks || []).map(t => ({
-          id: t.id,
-          title: t.title,
-          description: t.description,
-          status: mapApiStatusToUi(t.status),
-          date: t.dueDate
-            ? new Date(t.dueDate).toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'short',
-              })
-            : t.createdAt
-              ? new Date(t.createdAt).toLocaleDateString('pt-BR', {
-                  day: '2-digit',
-                  month: 'short',
-                })
-              : null,
-          projectId: t.projectId,
-          project: t.project?.name || t.project?.company?.name || '',
-          projectColor: t.project?.company?.colorHex || null,
-          priority: t.priority,
-          tags: (t.tags || []).map(x => x.tag?.name || x.name).filter(Boolean),
-        }));
-        setTasks(mapped);
-      } catch (err) {
-        console.error(err);
-        toast.error(err?.message || 'Falha ao carregar tarefas');
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [filters.project, filters.status, filters.searchTerm]);
+    loadTasks();
+  }, [loadTasks]);
 
   return (
     <AppLayout pageType="kanban">
@@ -488,9 +457,9 @@ const KanbanPage = () => {
           title="Editar Tarefa"
         >
           <TaskForm
+            initialData={taskToEdit}
             onSubmit={handleUpdateTask}
             onCancel={handleCloseEditModal}
-            initialData={taskToEdit}
           />
         </Modal>
 
@@ -499,7 +468,7 @@ const KanbanPage = () => {
           <TaskDetailModal
             task={selectedTask}
             onClose={handleCloseTaskDetail}
-            onDelete={handleDeleteTask}
+            onDelete={taskId => handleDeleteTask(taskId)}
             onEdit={handleEditTask}
           />
         )}
