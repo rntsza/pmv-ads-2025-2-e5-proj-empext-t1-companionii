@@ -1,5 +1,11 @@
 import PropTypes from 'prop-types';
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useState } from 'react';
 
@@ -9,13 +15,14 @@ const DraggableTaskCard = ({ task, isDragging, onClick }) => {
     data: { task },
   });
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-    opacity: isDragging ? 0.5 : 1,
-  } : undefined;
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        opacity: isDragging ? 0.5 : 1,
+      }
+    : undefined;
 
   const handleClick = () => {
-
     if (!transform && onClick) {
       onClick(task);
     }
@@ -31,11 +38,24 @@ const DraggableTaskCard = ({ task, isDragging, onClick }) => {
       className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all cursor-grab active:cursor-grabbing"
     >
       <div className="flex items-start justify-between mb-3">
-        <h4 className="font-semibold text-sm text-gray-900 flex-1">{task.title}</h4>
-        {task.date && <span className="text-xs text-gray-500 ml-2 whitespace-nowrap">{task.date}</span>}
+        <h4 className="font-semibold text-sm text-gray-900 flex-1">
+          {task.title}
+        </h4>
+        {task.date && (
+          <span className="text-xs text-gray-500 ml-2 whitespace-nowrap">
+            {task.date}
+          </span>
+        )}
       </div>
       {task.project && (
-        <span className="inline-block px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-md">
+        <span
+          className="inline-block px-3 py-1 text-white text-xs font-semibold rounded-md"
+          style={{
+            backgroundColor:
+              task.projectColor || '#10b981' /* fallback verde */,
+          }}
+          title={task.project}
+        >
           {task.project}
         </span>
       )}
@@ -45,10 +65,11 @@ const DraggableTaskCard = ({ task, isDragging, onClick }) => {
 
 DraggableTaskCard.propTypes = {
   task: PropTypes.shape({
-    id: PropTypes.number.isRequired,
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     title: PropTypes.string.isRequired,
     date: PropTypes.string,
     project: PropTypes.string,
+    projectColor: PropTypes.string,
   }).isRequired,
   isDragging: PropTypes.bool,
   onClick: PropTypes.func,
@@ -79,9 +100,7 @@ const DroppableColumn = ({ status, title, taskCount, children, bgColor }) => {
           {taskCount}
         </span>
       </div>
-      <div className="p-4 min-h-[400px] space-y-3">
-        {children}
-      </div>
+      <div className="p-4 min-h-[400px] space-y-3">{children}</div>
     </div>
   );
 };
@@ -102,7 +121,7 @@ const KanbanView = ({ tasks, onTaskMove, onTaskClick }) => {
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
   );
 
   const todoTasks = tasks.filter(task => task.status === 'todo');
@@ -110,11 +129,11 @@ const KanbanView = ({ tasks, onTaskMove, onTaskClick }) => {
   const reviewTasks = tasks.filter(task => task.status === 'review');
   const doneTasks = tasks.filter(task => task.status === 'done');
 
-  const handleDragStart = (event) => {
+  const handleDragStart = event => {
     setActiveId(event.active.id);
   };
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = event => {
     const { active, over } = event;
 
     if (over && active.data.current?.task) {
@@ -141,7 +160,12 @@ const KanbanView = ({ tasks, onTaskMove, onTaskClick }) => {
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Coluna A Fazer */}
-        <DroppableColumn status="todo" title="A Fazer" taskCount={todoTasks.length} bgColor="bg-gray-100">
+        <DroppableColumn
+          status="todo"
+          title="A Fazer"
+          taskCount={todoTasks.length}
+          bgColor="bg-gray-100"
+        >
           {todoTasks.length > 0 ? (
             todoTasks.map(task => (
               <DraggableTaskCard
@@ -157,7 +181,12 @@ const KanbanView = ({ tasks, onTaskMove, onTaskClick }) => {
         </DroppableColumn>
 
         {/* Coluna Revisão */}
-        <DroppableColumn status="review" title="Revisão" taskCount={reviewTasks.length} bgColor="bg-yellow-100">
+        <DroppableColumn
+          status="review"
+          title="Revisão"
+          taskCount={reviewTasks.length}
+          bgColor="bg-yellow-100"
+        >
           {reviewTasks.length > 0 ? (
             reviewTasks.map(task => (
               <DraggableTaskCard
@@ -173,7 +202,12 @@ const KanbanView = ({ tasks, onTaskMove, onTaskClick }) => {
         </DroppableColumn>
 
         {/* Coluna Em Progresso */}
-        <DroppableColumn status="in-progress" title="Em Progresso" taskCount={inProgressTasks.length} bgColor="bg-blue-100">
+        <DroppableColumn
+          status="in-progress"
+          title="Em Progresso"
+          taskCount={inProgressTasks.length}
+          bgColor="bg-blue-100"
+        >
           {inProgressTasks.length > 0 ? (
             inProgressTasks.map(task => (
               <DraggableTaskCard
@@ -189,7 +223,12 @@ const KanbanView = ({ tasks, onTaskMove, onTaskClick }) => {
         </DroppableColumn>
 
         {/* Coluna Concluído */}
-        <DroppableColumn status="done" title="Concluído" taskCount={doneTasks.length} bgColor="bg-green-100">
+        <DroppableColumn
+          status="done"
+          title="Concluído"
+          taskCount={doneTasks.length}
+          bgColor="bg-green-100"
+        >
           {doneTasks.length > 0 ? (
             doneTasks.map(task => (
               <DraggableTaskCard
@@ -209,11 +248,23 @@ const KanbanView = ({ tasks, onTaskMove, onTaskClick }) => {
         {activeTask ? (
           <div className="bg-white border-2 border-blue-500 rounded-xl p-4 shadow-2xl rotate-3">
             <div className="flex items-start justify-between mb-3">
-              <h4 className="font-semibold text-sm text-gray-900 flex-1">{activeTask.title}</h4>
-              {activeTask.date && <span className="text-xs text-gray-500 ml-2 whitespace-nowrap">{activeTask.date}</span>}
+              <h4 className="font-semibold text-sm text-gray-900 flex-1">
+                {activeTask.title}
+              </h4>
+              {activeTask.date && (
+                <span className="text-xs text-gray-500 ml-2 whitespace-nowrap">
+                  {activeTask.date}
+                </span>
+              )}
             </div>
             {activeTask.project && (
-              <span className="inline-block px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-md">
+              <span
+                className="inline-block px-3 py-1 text-white text-xs font-semibold rounded-md"
+                style={{
+                  backgroundColor: activeTask.projectColor || '#10b981',
+                }}
+                title={activeTask.project}
+              >
                 {activeTask.project}
               </span>
             )}
@@ -232,7 +283,7 @@ KanbanView.propTypes = {
       status: PropTypes.string.isRequired,
       date: PropTypes.string,
       project: PropTypes.string,
-    })
+    }),
   ).isRequired,
   onTaskMove: PropTypes.func.isRequired,
   onTaskClick: PropTypes.func,

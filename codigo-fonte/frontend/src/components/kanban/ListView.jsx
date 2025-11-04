@@ -1,34 +1,40 @@
 import PropTypes from 'prop-types';
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useState } from 'react';
 
-const getStatusConfig = (status) => {
+const getStatusConfig = status => {
   const configs = {
-    'todo': {
+    todo: {
       label: 'A Fazer',
       bgColor: 'bg-gray-100',
       textColor: 'text-gray-800',
-      dotColor: 'bg-gray-500'
+      dotColor: 'bg-gray-500',
     },
     'in-progress': {
       label: 'Em Progresso',
       bgColor: 'bg-blue-100',
       textColor: 'text-blue-800',
-      dotColor: 'bg-blue-500'
+      dotColor: 'bg-blue-500',
     },
-    'review': {
+    review: {
       label: 'Revisão',
       bgColor: 'bg-yellow-100',
       textColor: 'text-yellow-800',
-      dotColor: 'bg-yellow-500'
+      dotColor: 'bg-yellow-500',
     },
-    'done': {
+    done: {
       label: 'Concluído',
       bgColor: 'bg-green-100',
       textColor: 'text-green-800',
-      dotColor: 'bg-green-500'
-    }
+      dotColor: 'bg-green-500',
+    },
   };
   return configs[status] || configs['todo'];
 };
@@ -39,13 +45,14 @@ const DraggableListTask = ({ task, statusConfig, isDragging, onClick }) => {
     data: { task },
   });
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-    opacity: isDragging ? 0.5 : 1,
-  } : undefined;
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        opacity: isDragging ? 0.5 : 1,
+      }
+    : undefined;
 
   const handleClick = () => {
-
     if (!transform && onClick) {
       onClick(task);
     }
@@ -67,7 +74,11 @@ const DraggableListTask = ({ task, statusConfig, isDragging, onClick }) => {
             {task.title}
           </h3>
           {task.project && (
-            <span className="inline-block px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-md">
+            <span
+              className="inline-block px-3 py-1 text-white text-xs font-semibold rounded-md"
+              style={{ backgroundColor: task.projectColor || '#10b981' }}
+              title={task.project}
+            >
               {task.project}
             </span>
           )}
@@ -76,8 +87,12 @@ const DraggableListTask = ({ task, statusConfig, isDragging, onClick }) => {
         {/* Lado Direito - Status e Data */}
         <div className="flex items-center gap-4">
           {/* Status Badge */}
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${statusConfig.bgColor}`}>
-            <span className={`w-2 h-2 rounded-full ${statusConfig.dotColor}`}></span>
+          <div
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${statusConfig.bgColor}`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${statusConfig.dotColor}`}
+            ></span>
             <span className={`text-sm font-medium ${statusConfig.textColor}`}>
               {statusConfig.label}
             </span>
@@ -86,8 +101,18 @@ const DraggableListTask = ({ task, statusConfig, isDragging, onClick }) => {
           {/* Data */}
           {task.date && (
             <div className="flex items-center gap-2 text-gray-500">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
               <span className="text-sm">{task.date}</span>
             </div>
@@ -100,10 +125,11 @@ const DraggableListTask = ({ task, statusConfig, isDragging, onClick }) => {
 
 DraggableListTask.propTypes = {
   task: PropTypes.shape({
-    id: PropTypes.number.isRequired,
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     title: PropTypes.string.isRequired,
     date: PropTypes.string,
     project: PropTypes.string,
+    projectColor: PropTypes.string,
   }).isRequired,
   statusConfig: PropTypes.object.isRequired,
   isDragging: PropTypes.bool,
@@ -139,14 +165,14 @@ const ListView = ({ tasks, onTaskMove, onTaskClick }) => {
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
   );
 
-  const handleDragStart = (event) => {
+  const handleDragStart = event => {
     setActiveId(event.active.id);
   };
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = event => {
     const { active, over } = event;
 
     if (over && active.data.current?.task) {
@@ -165,10 +191,10 @@ const ListView = ({ tasks, onTaskMove, onTaskClick }) => {
   const activeTask = tasks.find(task => task.id === activeId);
   // Agrupar tarefas por status
   const tasksByStatus = {
-    'todo': tasks.filter(task => task.status === 'todo'),
-    'review': tasks.filter(task => task.status === 'review'),
+    todo: tasks.filter(task => task.status === 'todo'),
+    review: tasks.filter(task => task.status === 'review'),
     'in-progress': tasks.filter(task => task.status === 'in-progress'),
-    'done': tasks.filter(task => task.status === 'done'),
+    done: tasks.filter(task => task.status === 'done'),
   };
 
   const statusOrder = [
@@ -197,7 +223,8 @@ const ListView = ({ tasks, onTaskMove, onTaskClick }) => {
                 <div className="flex items-center gap-3 mb-4">
                   <h2 className={`text-lg font-bold ${color}`}>{label}</h2>
                   <span className="text-sm text-gray-500 font-medium">
-                    ({statusTasks.length} {statusTasks.length === 1 ? 'tarefa' : 'tarefas'})
+                    ({statusTasks.length}{' '}
+                    {statusTasks.length === 1 ? 'tarefa' : 'tarefas'})
                   </span>
                   <div className="flex-1 h-px bg-gray-200"></div>
                 </div>
@@ -223,11 +250,25 @@ const ListView = ({ tasks, onTaskMove, onTaskClick }) => {
         ) : (
           <div className="bg-white border border-gray-200 rounded-xl p-16">
             <div className="flex flex-col items-center justify-center text-center">
-              <svg className="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <svg
+                className="w-16 h-16 text-gray-400 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
               </svg>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhuma tarefa encontrada</h3>
-              <p className="text-gray-500">Adicione uma nova tarefa para começar</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Nenhuma tarefa encontrada
+              </h3>
+              <p className="text-gray-500">
+                Adicione uma nova tarefa para começar
+              </p>
             </div>
           </div>
         )}
@@ -242,15 +283,31 @@ const ListView = ({ tasks, onTaskMove, onTaskClick }) => {
                   {activeTask.title}
                 </h3>
                 {activeTask.project && (
-                  <span className="inline-block px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-md">
+                  <span
+                    className="inline-block px-3 py-1 text-white text-xs font-semibold rounded-md"
+                    style={{
+                      backgroundColor: activeTask.projectColor || '#10b981',
+                    }}
+                    title={activeTask.project}
+                  >
                     {activeTask.project}
                   </span>
                 )}
               </div>
               {activeTask.date && (
                 <div className="flex items-center gap-2 text-gray-500">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                   <span className="text-sm">{activeTask.date}</span>
                 </div>
@@ -271,7 +328,7 @@ ListView.propTypes = {
       status: PropTypes.string.isRequired,
       date: PropTypes.string,
       project: PropTypes.string,
-    })
+    }),
   ).isRequired,
   onTaskMove: PropTypes.func.isRequired,
   onTaskClick: PropTypes.func,

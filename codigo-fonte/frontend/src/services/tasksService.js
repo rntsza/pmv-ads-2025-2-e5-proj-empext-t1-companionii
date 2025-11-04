@@ -15,6 +15,30 @@ const PRIORITY_MAP = {
 };
 
 export const tasksService = {
+  list: async ({ projectId, status, q } = {}) => {
+    try {
+      const params = {};
+      if (projectId && projectId !== 'all') params.projectId = projectId;
+      if (status && status !== 'all')
+        params.status = STATUS_MAP[status] || 'TODO';
+      if (q) params.q = q;
+      const res = await api.get('/tasks', { params });
+      return res.data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  updateStatus: async (id, uiStatus) => {
+    try {
+      const status = STATUS_MAP[uiStatus] || 'TODO';
+      const res = await api.patch(`/tasks/${id}`, { status });
+      return res.data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
   create: async form => {
     try {
       const payload = {
