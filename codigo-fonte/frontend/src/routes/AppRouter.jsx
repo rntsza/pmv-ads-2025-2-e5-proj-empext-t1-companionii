@@ -7,7 +7,7 @@ import {
 import { Suspense } from 'react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { FullPageLoader, ToastContainer } from '../components/ui';
-import { LoginPage, RegisterPage, ForgotPasswordPage, ChangePasswordPage } from '../pages/auth';
+import { LoginPage, RegisterPage, ForgotPasswordPage, ChangePasswordPage, AcceptInvitePage } from '../pages/auth';
 import GoogleCallbackPage from '../pages/auth/GoogleCallbackPage';
 import HomePage from '../pages/HomePage';
 import ReportsPage from '../pages/ReportsPage';
@@ -27,6 +27,7 @@ const AppRouter = () => {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/change-password" element={<ChangePasswordPage />} />
+            <Route path="/accept-invite" element={<AcceptInvitePage />} />
             <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
             {/* Rotas protegidas */}

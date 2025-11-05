@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useAuthStore } from '../../stores/authStore';
 import { useToast } from '../../hooks/useToast';
+import invitesService from '../../services/invitesService';
 import Modal from './Modal';
 import Input from './Input';
 import Button from './Button';
@@ -24,6 +25,8 @@ const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
     avatar: user?.imageUrl || '',
   });
   const [errors, setErrors] = useState({});
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [isInviting, setIsInviting] = useState(false);
   const { forgotPassword, isLoading: forgotPasswordIsLoading } = useAuthStore();
   const { toast } = useToast();
 
@@ -120,6 +123,35 @@ const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
     );
   };
 
+  const handleInviteCollaborator = async () => {
+    if (!inviteEmail.trim()) {
+      toast.error('Por favor, insira um email válido');
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail)) {
+      toast.error('Email inválido');
+      return;
+    }
+
+    setIsInviting(true);
+    try {
+      await invitesService.createInvite({
+        email: inviteEmail,
+        role: 'COLLABORATOR',
+      });
+      toast.success(`Convite enviado para ${inviteEmail}`);
+      setInviteEmail('');
+    } catch (error) {
+      console.error('Erro ao enviar convite:', error);
+      toast.error(
+        error.message || 'Erro ao enviar convite. Tente novamente.',
+      );
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
   const getInitials = name => {
     if (!name) return '?';
     const parts = name.trim().split(' ');
@@ -209,6 +241,38 @@ const UserProfileModal = ({ isOpen, onClose, user, onSave }) => {
             required
           />
         </div>
+
+      
+        {!isEditing && user?.role === 'ADMIN' && (
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">
+              Convidar Colaborador
+            </h3>
+            <div className="flex gap-2">
+              <Input
+                name="inviteEmail"
+                type="email"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                placeholder="email@exemplo.com"
+                disabled={isInviting}
+                className="flex-1"
+              />
+              <Button
+                variant="primary"
+                onClick={handleInviteCollaborator}
+                disabled={isInviting || !inviteEmail.trim()}
+                className="whitespace-nowrap"
+              >
+                {isInviting ? 'Enviando...' : 'Enviar Convite'}
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              O colaborador receberá um email com instruções para criar sua
+              conta.
+            </p>
+          </div>
+        )}
 
         {/* Password Change Link */}
         {!isEditing && (
