@@ -2,11 +2,15 @@
 
 Apresente os casos de testes utilizados na realização da verificação e validação da aplicação. Escolha cenários de testes que demonstrem os requisitos sendo satisfeitos bem como o tratamento de erros (robustez da aplicação).
 
+Vide a pasta [Testes](./Testes/)
+
 ### Tipo de Teste
+
 - **Sucesso**: Tem o objetivo de verificar se as funcionalidades funcionam corretamente.
 - **Insucesso**: Tem o objetivo de verificar se o sistema trata erros de maneira correta.
 
 #### Exemplo de Caso de Teste de Sucesso
+
 O caso de teste de sucesso deve ser identificado por CT - xxx - S
 
 <table>
@@ -51,9 +55,12 @@ O caso de teste de sucesso deve ser identificado por CT - xxx - S
 </table>
 
 #### Exemplo de Caso de Teste de Insucesso
+
 Os casos de testes de insucesso devem ser identificados por CT - xxx - I + sequencial de insucesso.
 Para cada etapa do projeto, criar uma seção com o nome da Etapa do projeto: Etapa 2, Etapa 3 e Etapa 4
-### ETAPA 2  
+
+### ETAPA 2
+
 <table>
   <tr>
     <th colspan="2" width="1000">CT-001 - I01<br>Login com credenciais inválidas</th>
@@ -96,20 +103,25 @@ Para cada etapa do projeto, criar uma seção com o nome da Etapa do projeto: Et
 </table>
 
 ### ETAPA 3
+
 Criar casos de teste da etapa 3
 
 ### ETAPA 4
+
 Criar casos de teste da etapa 4
- 
+
 # Evidências de Testes de Software
 
 Apresente imagens e/ou vídeos que comprovam que um determinado teste foi executado, e o resultado esperado foi obtido. Normalmente são screenshots de telas, ou vídeos do software em funcionamento.
 
 ## Parte 1 - Testes de desenvolvimento
+
 Cada funcionalidade desenvolvida deve ser testada pelo próprio desenvolvedor, utilizando casos de teste, tanto de sucesso quanto de insucesso, elaborados por ele. Todos os testes devem ser evidenciados.
 
 ### Exemplo
+
 ### ETAPA 2
+
 <table>
   <tr>
     <th colspan="6" width="1000">CT-001<br>Login com credenciais válidas</th>
@@ -137,17 +149,21 @@ Cada funcionalidade desenvolvida deve ser testada pelo próprio desenvolvedor, u
 </table>
 
 ### ETAPA 3
+
 Colocar evidências de teste da etapa 3
 
 ### ETAPA 4
+
 Colocar evidências de teste da etapa 4
 
 ## Parte 2 - Testes por pares
+
 A fim de aumentar a qualidade da aplicação desenvolvida, cada funcionalidade deve ser testada por um colega e os testes devem ser evidenciados. O colega "Tester" deve utilizar o caso de teste criado pelo desenvolvedor responsável pela funcionalidade (desenvolveu a funcionalidade e criou o caso de testes descrito no plano de testes) e caso perceba a necessidade de outros casos de teste, deve acrescentá-los na sessão "Plano de Testes".
 
 ### ETAPA 2
 
 ### Exemplo
+
 <table>
   <tr>
     <th colspan="6" width="1000">CT-001<br>Login com credenciais válidas</th>
@@ -177,8 +193,9 @@ A fim de aumentar a qualidade da aplicação desenvolvida, cada funcionalidade d
 </table>
 
 ### ETAPA 3
+
 Colocar evidências de teste da etapa 3
 
 ### ETAPA 4
-Colocar evidências de teste da etapa 4
 
+Colocar evidências de teste da etapa 4

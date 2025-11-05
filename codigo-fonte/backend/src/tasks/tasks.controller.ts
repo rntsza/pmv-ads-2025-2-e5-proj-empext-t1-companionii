@@ -36,7 +36,11 @@ export class TasksController {
   @Get()
   async findAll(@Query() q: ListTasksQueryDto) {
     const { projectId, status } = q;
-    return await this.tasks.list({ projectId, status: status });
+    return await this.tasks.list({ projectId, status });
+  }
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return await this.tasks.findOne(id);
   }
 
   @Patch(':id')
