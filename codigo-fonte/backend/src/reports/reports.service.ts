@@ -1,7 +1,6 @@
+import * as crypto from 'crypto';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { GeminiService } from '../ia/gemini.service';
-import { GenerateReportDto, Period, Scope } from './dto/generate-report.dto';
+import { BoardStatus, Prisma, TaskPriority } from '@prisma/client';
 import {
   startOfDay,
   endOfDay,
@@ -10,8 +9,10 @@ import {
   startOfMonth,
   endOfMonth,
 } from 'date-fns';
-import { BoardStatus, TaskPriority } from '@prisma/client';
-import * as crypto from 'crypto';
+import { PrismaService } from '../prisma/prisma.service';
+import { GeminiService } from '../ia/gemini.service';
+import { AIReportData } from '../ia/types/ia-report.types';
+import { GenerateReportDto, Period, Scope } from './dto/generate-report.dto';
 
 type Facts = {
   scope: 'all' | 'project';
@@ -67,9 +68,14 @@ export class ReportsService {
     // 0) try to find an existing report
     const existing = await this.prisma.report.findFirst({
       where: { reportKey },
+      select: { id: true, aiData: true },
     });
 
-    if (existing) return { reportId: existing.id, html: existing.aiSummary };
+    if (existing?.aiData)
+      return {
+        reportId: existing.id,
+        data: existing.aiData as unknown as AIReportData,
+      };
 
     // 1) Fetch tasks + minimal joins for filters
     const tasks = await this.prisma.task.findMany({
@@ -120,11 +126,14 @@ export class ReportsService {
       })),
     };
 
-    // 3) Call IA -> HTML
-    const html = await this.gemini.htmlFromFacts(
+    // 3) Call IA -> structured JSON
+    const aiData = await this.gemini.jsonFromFacts(
       this.basePrompt,
       JSON.stringify(facts),
     );
+    const aiDataClean = JSON.parse(JSON.stringify(aiData)) as unknown;
+    const aiPayload: Prisma.InputJsonValue =
+      aiDataClean as Prisma.InputJsonValue;
 
     // 5) (Opcional) Persists report
     const title = `Relatório ${dto.period === Period.DAILY ? 'Diário' : dto.period === Period.WEEKLY ? 'Semanal' : 'Mensal'}`;
@@ -133,7 +142,7 @@ export class ReportsService {
         userId: await this.ensureSystemUserId(),
         companyId: null,
         title,
-        aiSummary: html,
+        aiData: aiPayload,
         periodStart: start,
         periodEnd: end,
         totalTasks: agg.totals.tasks,
@@ -142,7 +151,7 @@ export class ReportsService {
       },
     });
 
-    return { reportId: report.id, html };
+    return { reportId: report.id, data: aiData };
   }
 
   private buildKey(dto: GenerateReportDto, start: Date, end: Date) {

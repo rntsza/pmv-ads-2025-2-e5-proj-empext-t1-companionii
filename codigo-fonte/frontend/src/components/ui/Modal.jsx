@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 const Modal = ({ isOpen, onClose, title, children, size = 'medium' }) => {
   useEffect(() => {
-    const handleEscape = (e) => {
+    const handleEscape = e => {
       if (e.key === 'Escape' && isOpen) {
         onClose();
       }
@@ -23,13 +23,14 @@ const Modal = ({ isOpen, onClose, title, children, size = 'medium' }) => {
   };
 
   return (
-    // A CORREÇÃO ESTÁ AQUI: Adicionamos data-theme="light"
     <div className="modal modal-open" data-theme="light">
       <div className={`modal-box ${sizeClasses[size]}`}>
         {/* Cabeçalho */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-lg">{title}</h3>
-          <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost">✕</button>
+          <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost">
+            ✕
+          </button>
         </div>
 
         {/* Conteúdo */}
