@@ -8,7 +8,7 @@ export const aiReportsService = {
       if (projectId) body.projectId = projectId;
 
       const res = await api.post('/reports/ai', body);
-      // { reportId, html }
+      // { reportId, data }
       return res.data;
     } catch (err) {
       handleApiError(err);

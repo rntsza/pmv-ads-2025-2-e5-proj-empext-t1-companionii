@@ -275,6 +275,7 @@ model Report {
   company      Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
   title        String
   aiSummary    String?
+  aiData       Json?
   periodStart  DateTime
   periodEnd    DateTime
   totalTasks   Int      @default(0)

@@ -6,12 +6,12 @@ const AppLayout = ({ children, pageType = 'dashboard' }) => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleNavigation = (pageId) => {
+  const handleNavigation = pageId => {
     const routes = {
       dashboard: '/dashboard',
       reports: '/reports',
       kanban: '/kanban',
-      projects: '/projects'
+      projects: '/projects',
     };
 
     if (routes[pageId]) {
@@ -20,14 +20,11 @@ const AppLayout = ({ children, pageType = 'dashboard' }) => {
   };
 
   return (
-    // A CORREÇÃO ESTÁ AQUI: trocamos bg-gray-50 por bg-white
-    <div className="min-h-screen bg-white"> 
+    <div className="min-h-screen bg-white">
       <Header type={pageType} user={user} onNavigate={handleNavigation} />
 
       <main className="flex-1">
-        <div className="py-6">
-          {children}
-        </div>
+        <div className="py-6">{children}</div>
       </main>
     </div>
   );

@@ -1,7 +1,6 @@
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import PropTypes from 'prop-types';
 
-// Estilos do PDF
 const styles = StyleSheet.create({
   page: {
     padding: 30,
@@ -126,24 +125,32 @@ const styles = StyleSheet.create({
   },
 });
 
-const ReportPDFDocument = ({ reportData, reportType }) => {
-  const currentDate = new Date().toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
-  const currentDateTime = new Date().toLocaleString('pt-BR');
-  const currentYear = new Date().getFullYear();
+const ReportPDFDocument = ({ reportData }) => {
+  const metrics = reportData.metrics ?? {
+    tasksCompleted: 0,
+    totalTasks: 0,
+    productivity: 0,
+    hoursWorked: '0h',
+    efficiency: 100,
+  };
+  const periodTitle =
+    reportData.period === 'weekly'
+      ? 'Relatório Semanal'
+      : reportData.period === 'monthly'
+        ? 'Relatório Mensal'
+        : 'Relatório Diário';
+  const dt = new Date(reportData.generatedAt ?? Date.now());
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>{reportData.title}</Text>
-          <Text style={styles.subtitle}>{currentDate}</Text>
+          <Text style={styles.title}>{periodTitle}</Text>
+          <Text style={styles.subtitle}>
+            Gerado em {dt.toLocaleDateString('pt-BR')}{' '}
+            {dt.toLocaleTimeString('pt-BR')}
+          </Text>
         </View>
 
         {/* Métricas */}
@@ -153,71 +160,100 @@ const ReportPDFDocument = ({ reportData, reportType }) => {
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>Tarefas</Text>
               <Text style={styles.metricValue}>
-                {reportData.metrics.completed}/{reportData.metrics.total}
+                {metrics.tasksCompleted}/{metrics.totalTasks}
               </Text>
             </View>
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>Horas</Text>
-              <Text style={styles.metricValue}>{reportData.metrics.hours}</Text>
+              <Text style={styles.metricValue}>{metrics.hoursWorked}</Text>
             </View>
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>Produtividade</Text>
-              <Text style={styles.metricValue}>{reportData.metrics.productivity}</Text>
+              <Text style={styles.metricValue}>
+                {Math.round(metrics.productivity)}%
+              </Text>
             </View>
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>Eficiência</Text>
-              <Text style={styles.metricValue}>85%</Text>
+              <Text style={styles.metricValue}>
+                {Math.round(metrics.efficiency)}%
+              </Text>
             </View>
           </View>
         </View>
 
         {/* Tarefas */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tarefas Realizadas</Text>
-          <View style={styles.table}>
-            {/* Table Header */}
-            <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderCell, styles.taskColumn]}>Tarefa</Text>
-              <Text style={[styles.tableHeaderCell, styles.projectColumn]}>Projeto</Text>
-              <Text style={[styles.tableHeaderCell, styles.timeColumn]}>Tempo</Text>
-              <Text style={[styles.tableHeaderCell, styles.statusColumn]}>Status</Text>
-            </View>
-
-            {/* Table Rows */}
-            {reportData.tasks.map((task, index) => (
-              <View key={index} style={styles.tableRow}>
-                <Text style={[styles.tableCell, styles.taskColumn]}>{task.title}</Text>
-                <Text style={[styles.tableCell, styles.projectColumn]}>{task.project}</Text>
-                <Text style={[styles.tableCell, styles.timeColumn]}>{task.time}</Text>
-                <View style={styles.statusColumn}>
-                  <Text
-                    style={[
-                      styles.statusBadge,
-                      task.status === 'Concluída'
-                        ? styles.statusCompleted
-                        : styles.statusInProgress,
-                    ]}
-                  >
-                    {task.status}
-                  </Text>
-                </View>
+        {reportData.tasks?.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Tarefas</Text>
+            <View style={styles.table}>
+              {/* Table Header */}
+              <View style={styles.tableHeader}>
+                <Text style={[styles.tableHeaderCell, styles.taskColumn]}>
+                  Tarefa
+                </Text>
+                <Text style={[styles.tableHeaderCell, styles.projectColumn]}>
+                  Projeto
+                </Text>
+                <Text style={[styles.tableHeaderCell, styles.timeColumn]}>
+                  Tempo
+                </Text>
+                <Text style={[styles.tableHeaderCell, styles.statusColumn]}>
+                  Status
+                </Text>
               </View>
-            ))}
+
+              {/* Table Rows */}
+              {reportData.tasks.map((task, index) => (
+                <View key={index} style={styles.tableRow}>
+                  <Text style={[styles.tableCell, styles.taskColumn]}>
+                    {task.title}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.projectColumn]}>
+                    {task.project ?? '-'}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.timeColumn]}>
+                    {task.timeSpent}
+                  </Text>
+                  <View style={styles.statusColumn}>
+                    <Text
+                      style={[
+                        styles.statusBadge,
+                        task.status === 'Concluída'
+                          ? styles.statusCompleted
+                          : styles.statusInProgress,
+                      ]}
+                    >
+                      {task.status}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Insights */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Análise e Insights</Text>
-          <View style={styles.insightBox}>
-            <Text style={styles.insightText}>{reportData.summary}</Text>
+        {reportData.aiInsights?.summary && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Insights da IA</Text>
+            <View style={styles.insightBox}>
+              <Text style={styles.insightText}>
+                {reportData.aiInsights.summary}
+              </Text>
+              {reportData.aiInsights.recommendations?.map((r, i) => (
+                <Text key={i} style={styles.insightText}>
+                  • {r}
+                </Text>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Relatório gerado em {currentDateTime} | © {currentYear} Companion
+            Companion · {new Date().getFullYear()}
           </Text>
         </View>
       </Page>
@@ -227,24 +263,28 @@ const ReportPDFDocument = ({ reportData, reportType }) => {
 
 ReportPDFDocument.propTypes = {
   reportData: PropTypes.shape({
-    title: PropTypes.string.isRequired,
+    period: PropTypes.oneOf(['daily', 'weekly', 'monthly']).isRequired,
+    generatedAt: PropTypes.string,
+    metrics: PropTypes.shape({
+      tasksCompleted: PropTypes.number,
+      totalTasks: PropTypes.number,
+      productivity: PropTypes.number,
+      hoursWorked: PropTypes.string,
+      efficiency: PropTypes.number,
+    }),
     tasks: PropTypes.arrayOf(
       PropTypes.shape({
         title: PropTypes.string.isRequired,
-        project: PropTypes.string.isRequired,
-        time: PropTypes.string.isRequired,
-        status: PropTypes.string.isRequired,
+        project: PropTypes.string,
+        timeSpent: PropTypes.string.isRequired,
+        status: PropTypes.oneOf(['completed', 'in_progress']).isRequired,
       }),
-    ).isRequired,
-    summary: PropTypes.string.isRequired,
-    metrics: PropTypes.shape({
-      completed: PropTypes.number.isRequired,
-      total: PropTypes.number.isRequired,
-      hours: PropTypes.string.isRequired,
-      productivity: PropTypes.string.isRequired,
-    }).isRequired,
+    ),
+    aiInsights: PropTypes.shape({
+      summary: PropTypes.string,
+      recommendations: PropTypes.arrayOf(PropTypes.string),
+    }),
   }).isRequired,
-  reportType: PropTypes.oneOf(['daily', 'weekly']).isRequired,
 };
 
 export default ReportPDFDocument;

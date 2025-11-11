@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { AIReportData } from './types/ia-report.types';
+import { AiReportSchema } from './types/ia-report.schema';
 
 export type GeminiOptions = {
   model: string;
@@ -14,7 +16,10 @@ export class GeminiService {
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
   }
 
-  async htmlFromFacts(systemPrompt: string, facts: string): Promise<string> {
+  async jsonFromFacts(
+    systemPrompt: string,
+    facts: string,
+  ): Promise<AIReportData> {
     const model = this.genAI.getGenerativeModel({
       model: this.opts.model,
       generationConfig: {
@@ -24,27 +29,35 @@ export class GeminiService {
       },
       systemInstruction: systemPrompt,
     });
+
     const res = await model.generateContent({
       contents: [
         {
+          role: 'user',
           parts: [
             {
-              text: `Gere um relatório em HTML com base no JSON de fatos a seguir:
-${facts}
-
-Requisitos do HTML:
-- Não inclua <html> ou <head>; apenas o conteúdo que vai dentro do <body>.
-- Seções: <h2>Resumo Executivo</h2>, <h2>Detalhado</h2>, <h2>Métricas</h2>, <h2>Próximas Ações</h2>.
-- Não inclua Markdown como marcadores de linguagem ou crases, nem comentários.
-- Não invente dados; use somente o que está nos fatos.'
-- Use classes do Tailwind CSS para formatação (ex: 'text-red-500', 'font-bold', 'mb-4', 'p-2', 'border', 'rounded').
-- Quando aplicável, agrupe por empresa e projeto.`,
+              text: `Gere SOMENTE JSON válido seguindo o schema. Fatos:\n${facts}`,
             },
           ],
-          role: 'user',
         },
       ],
     });
-    return res.response.text();
+
+    const raw = res.response.text().trim();
+
+    const sanitized = raw.replace(/^```json\s*|\s*```$/g, '');
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(sanitized);
+    } catch (err) {
+      throw new Error(`IA retornou JSON inválido: ${err.message}`);
+    }
+
+    const validated = AiReportSchema.parse(parsed);
+    return {
+      ...validated,
+      generatedAt: new Date().toISOString(),
+    };
   }
 }

@@ -1,10 +1,13 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { PDFViewer, pdf } from '@react-pdf/renderer';
+import ReportPDFDocument from '../components/reports/ReportPDFDocument';
 import { AppLayout } from '../layouts';
 import { Button, Modal } from '../components/ui';
 import { projectsService } from '../services/projectsService';
 import { dashboardsService } from '../services/dashboardService';
 import { aiReportsService } from '../services/aiReportsService';
 import { useToast } from '../hooks/useToast';
+import { useAuthStore } from '../stores/authStore';
 
 const PERIOD_OPT = [
   { label: 'Hoje', value: 'daily' },
@@ -25,6 +28,7 @@ const ReportsPage = () => {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState(PERIOD_OPT[0].label);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuthStore();
 
   // dados do resumo da API
   const [summary, setSummary] = useState({
@@ -37,8 +41,7 @@ const ReportsPage = () => {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [aiHtml, setAiHtml] = useState('');
-  const previewRef = useRef(null);
+  const [reportData, setReportData] = useState(null);
 
   const priorityDistUI = useMemo(() => {
     const dist = summary.distribuicaoPrioridade || {};
@@ -61,15 +64,16 @@ const ReportsPage = () => {
   }, [summary]);
 
   const handleGenerateAI = async (
-    periodValue /* 'daily'|'weekly'|'monthly' */,
+    period /* 'daily'|'weekly'|'monthly' */,
+    projectId,
   ) => {
     setIsGenerating(true);
     try {
-      const { html } = await aiReportsService.generate({
-        projectId: selectedProjectId || undefined,
-        period: periodValue,
+      const { data } = await aiReportsService.generate({
+        projectId,
+        period,
       });
-      setAiHtml(html || '<p>Nenhum conteúdo retornado.</p>');
+      setReportData(data);
       toast.success('Relatório de IA gerado com sucesso!');
       setIsModalOpen(true);
     } catch (err) {
@@ -80,26 +84,18 @@ const ReportsPage = () => {
     }
   };
 
-  const handleDownloadHTML = () => {
-    const blob = new Blob([aiHtml], { type: 'text/html;charset=utf-8' });
+  const handleDownloadPDF = async () => {
+    if (!reportData) return;
+    const blob = await pdf(
+      <ReportPDFDocument reportData={reportData} />,
+    ).toBlob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const label =
-      (PERIOD_OPT.find(p => p.label === selectedPeriod)?.value || 'daily') ??
-      'relatorio';
+    const label = reportData.period ?? 'daily';
     a.href = url;
-    a.download = `${label}-ia-${new Date().toISOString().split('T')[0]}.html`;
+    a.download = `${label}-report-${new Date().toISOString().slice(0, 10)}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  const handlePrintHTML = () => {
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.open();
-    win.document.write(aiHtml);
-    win.document.close();
-    win.onload = () => win.print();
   };
 
   useEffect(() => {
@@ -307,28 +303,17 @@ const ReportsPage = () => {
                   handleGenerateAI(
                     PERIOD_OPT.find(p => p.label === selectedPeriod)?.value ||
                       'daily',
+                    selectedProjectId || undefined,
                   )
                 }
-                disabled={isGenerating}
+                disabled={isGenerating || user.role !== 'ADMIN'}
               >
-                {isGenerating ? 'Gerando... Isso pode demorar' : '+ Relatório'}
+                {isGenerating
+                  ? 'Gerando... Isso pode demorar'
+                  : user.role !== 'ADMIN'
+                    ? 'Apenas ADMIN'
+                    : '+ Relatório'}
               </Button>
-              {/* <Button
-                variant="outline"
-                size="small"
-                onClick={() => handleGenerateAI('weekly')}
-                disabled={isGenerating}
-              >
-                {isGenerating ? 'Gerando...' : '+ Relatório semanal'}
-              </Button>
-              <Button
-                variant="outline"
-                size="small"
-                onClick={() => handleGenerateAI('monthly')}
-                disabled={isGenerating}
-              >
-                {isGenerating ? 'Gerando...' : '+ Relatório mensal'}
-              </Button> */}
             </div>
           </div>
         </div>
@@ -445,33 +430,28 @@ const ReportsPage = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Preview do Relatório de IA"
+        title="Preview do Relatório"
         size="xlarge"
       >
         <div className="space-y-4">
           <div className="flex justify-end gap-3">
-            <Button variant="outline" size="small" onClick={handleDownloadHTML}>
-              ⬇️ Salvar .HTML
-            </Button>
-            <Button variant="outline" size="small" onClick={handlePrintHTML}>
-              🖨️ Imprimir / Salvar PDF
-            </Button>
-            <Button
-              variant="primary"
-              size="small"
-              onClick={() => setIsModalOpen(false)}
-            >
+            <Button size="small" onClick={() => setIsModalOpen(false)}>
               Fechar
+            </Button>
+            <Button variant="primary" size="small" onClick={handleDownloadPDF}>
+              📥 Download PDF
             </Button>
           </div>
 
-          <div
-            ref={previewRef}
-            className="border border-gray-300 rounded-lg overflow-auto h-[600px] bg-white"
-          >
-            {/* Renderiza o HTML retornado pela IA */}
-            <div dangerouslySetInnerHTML={{ __html: aiHtml }} />
-          </div>
+          {reportData ? (
+            <div className="border border-gray-300 rounded-lg overflow-hidden">
+              <PDFViewer width="100%" height="600px">
+                <ReportPDFDocument reportData={reportData} />
+              </PDFViewer>
+            </div>
+          ) : (
+            <div className="p-4 text-sm text-gray-500">Sem dados</div>
+          )}
         </div>
       </Modal>
     </AppLayout>
