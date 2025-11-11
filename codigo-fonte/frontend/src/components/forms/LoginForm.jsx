@@ -5,7 +5,7 @@ import { Button, Input, Checkbox } from '../ui';
 import { loginSchema } from '../../types/auth';
 import { useAuthStore } from '../../stores/authStore';
 import { useToast } from '../../hooks/useToast';
-import { authService } from '../../services/authService';
+// import { authService } from '../../services/authService';
 
 const LoginForm = () => {
   const { login, isLoading, isRateLimited, getCooldownTime } = useAuthStore();
@@ -53,14 +53,13 @@ const LoginForm = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    const googleAuthUrl = authService.getGoogleAuthUrl();
-    window.location.href = googleAuthUrl;
-  };
+  // const handleGoogleLogin = () => {
+  //   const googleAuthUrl = authService.getGoogleAuthUrl();
+  //   window.location.href = googleAuthUrl;
+  // };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-  
       <Input
         label="Endereço de email"
         type="email"
@@ -72,7 +71,6 @@ const LoginForm = () => {
         data-testid="email-input"
       />
 
-  
       <Input
         label="Senha"
         type="password"
@@ -84,7 +82,6 @@ const LoginForm = () => {
         data-testid="password-input"
       />
 
-  
       <div className="flex items-center justify-between">
         <Checkbox label="Lembrar de mim" {...register('rememberMe')} />
         <Link
@@ -95,7 +92,6 @@ const LoginForm = () => {
         </Link>
       </div>
 
- 
       <Button
         type="submit"
         className="w-full"
@@ -106,8 +102,7 @@ const LoginForm = () => {
         {isSubmitting || isLoading ? 'Entrando...' : 'Entrar'}
       </Button>
 
-     
-      <div className="relative">
+      {/* <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-gray-300" />
         </div>
@@ -143,9 +138,8 @@ const LoginForm = () => {
           />
         </svg>
         Continuar com Google
-      </Button>
+      </Button> */}
 
-  
       <div className="text-center">
         <span className="text-body-medium text-gray-600">
           Não tem uma conta?{' '}
