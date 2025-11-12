@@ -18,7 +18,8 @@ import { Role } from '../common/enums/role.enum';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { ListTasksQueryDto } from './dto/findall-task-query.dto';
+import { FindAllTasksQueryDto } from './dto/findall-task-query.dto';
+import { FindallTaskActivitiesQueryDto } from './dto/findall-task-activities-query.dto';
 
 @ApiTags('tasks')
 @ApiBearerAuth()
@@ -34,7 +35,7 @@ export class TasksController {
   }
 
   @Get()
-  async findAll(@Query() q: ListTasksQueryDto) {
+  async findAll(@Query() q: FindAllTasksQueryDto) {
     const { projectId, status } = q;
     return await this.tasks.list({ projectId, status });
   }
@@ -44,8 +45,12 @@ export class TasksController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateTaskDto) {
-    return await this.tasks.update(id, dto);
+  async update(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateTaskDto,
+  ) {
+    return await this.tasks.update(id, dto, req.user.userId);
   }
 
   @Delete(':id')
@@ -66,5 +71,15 @@ export class TasksController {
   @Post(':id/timer/stop')
   async stop(@Param('id') id: string) {
     return await this.tasks.stopTimer(id);
+  }
+
+  @Get(':id/activities')
+  async findAllTaskActivities(
+    @Param('id') id: string,
+    @Query() q: FindallTaskActivitiesQueryDto,
+  ) {
+    const { take, cursor } = q;
+    const t = take ? Number(take) : undefined;
+    return await this.tasks.listActivitiesByTask(id, { cursor, take: t });
   }
 }

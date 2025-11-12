@@ -3,10 +3,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { BoardStatus } from '@prisma/client';
+import { ActivityType, BoardStatus } from '@prisma/client';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { buildDiff, formatMessage } from '../utils/activity-formatter';
+
+type Diff = Record<string, { from: any; to: any }>;
 
 @Injectable()
 export class TasksService {
@@ -22,7 +25,7 @@ export class TasksService {
       },
     }));
 
-    return await this.prisma.task.create({
+    const created = await this.prisma.task.create({
       data: {
         projectId: dto.projectId,
         title: dto.title,
@@ -36,6 +39,32 @@ export class TasksService {
       },
       include: { tags: { include: { tag: true } } },
     });
+
+    const formattedMessage = formatMessage({
+      type: ActivityType.CREATE,
+    });
+
+    const snapshot = {
+      id: created.id,
+      title: created.title,
+      description: created.description,
+      status: created.status,
+      priority: created.priority,
+      dueDate: created.dueDate?.toISOString() ?? null,
+      tags: created.tags?.map((t) => t.tag.name) ?? [],
+    };
+
+    await this.logActivity({
+      taskId: created.id,
+      actorId: createdById ?? null,
+      type: ActivityType.CREATE,
+      formattedMessage,
+      diff: {
+        created: { from: null, to: snapshot },
+      },
+    });
+
+    return created;
   }
 
   async findOne(id: string) {
@@ -70,8 +99,11 @@ export class TasksService {
     });
   }
 
-  async update(id: string, dto: UpdateTaskDto) {
-    const before = await this.prisma.task.findUnique({ where: { id } });
+  async update(id: string, dto: UpdateTaskDto, actorId: string) {
+    const before = await this.prisma.task.findUnique({
+      where: { id },
+      include: { tags: { include: { tag: true } } },
+    });
     if (!before) throw new NotFoundException('Task not found');
 
     const { tags, ...rest } = dto as UpdateTaskDto & { tags?: string[] };
@@ -124,7 +156,7 @@ export class TasksService {
 
     if (rest.dueDate) data.dueDate = new Date(rest.dueDate);
 
-    await this.prisma.task.update({
+    const updated = await this.prisma.task.update({
       where: { id },
       data,
       include: {
@@ -139,15 +171,52 @@ export class TasksService {
       await this.setTags(id, tags);
     }
 
-    return this.prisma.task.findUnique({
-      where: { id },
-      include: {
-        tags: { include: { tag: true } },
-        project: {
-          select: { company: { select: { name: true, colorHex: true } } },
-        },
+    const diff = buildDiff(
+      {
+        title: before.title,
+        description: before.description,
+        status: before.status,
+        priority: before.priority,
+        dueDate: before.dueDate?.toISOString(),
+        tags: before.tags?.map((t) => t.tag.name).sort(),
       },
+      {
+        title: updated.title,
+        description: updated.description,
+        status: updated.status,
+        priority: updated.priority,
+        dueDate: updated.dueDate?.toISOString(),
+        tags: updated.tags?.map((t) => t.tag.name).sort(),
+      },
+      ['title', 'description', 'status', 'priority', 'dueDate', 'tags'],
+    );
+
+    const type = diff?.status
+      ? ActivityType.STATUS_CHANGE
+      : diff?.tags &&
+          !diff?.title &&
+          !diff?.description &&
+          !diff?.priority &&
+          !diff?.dueDate
+        ? diff.tags.from?.length < (diff.tags.to?.length ?? 0)
+          ? ActivityType.TAG_ADD
+          : ActivityType.TAG_REMOVE
+        : ActivityType.UPDATE;
+
+    const formattedMessage = formatMessage({
+      type,
+      diff,
     });
+
+    await this.logActivity({
+      taskId: id,
+      actorId,
+      type,
+      diff,
+      formattedMessage,
+    });
+
+    return updated;
   }
 
   async remove(id: string) {
@@ -214,5 +283,34 @@ export class TasksService {
       }),
     ]);
     return log;
+  }
+
+  async listActivitiesByTask(
+    taskId: string,
+    opts: { cursor?: string; take?: number },
+  ) {
+    const take = Math.min(Math.max(opts?.take ?? 20, 1), 100);
+    return this.prisma.taskActivity.findMany({
+      where: { taskId },
+      orderBy: { createdAt: 'desc' },
+      take,
+      ...(opts?.cursor ? { cursor: { id: opts.cursor }, skip: 1 } : {}),
+      include: {
+        actor: { select: { id: true, name: true, email: true } },
+      },
+    });
+  }
+
+  async logActivity(params: {
+    taskId: string;
+    actorId: string | null;
+    type: ActivityType;
+    diff?: Diff;
+    formattedMessage: string;
+  }) {
+    const { taskId, actorId, type, diff, formattedMessage } = params;
+    return this.prisma.taskActivity.create({
+      data: { taskId, actorId, type, diff, formattedMessage },
+    });
   }
 }
