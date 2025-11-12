@@ -2,8 +2,6 @@ import PropTypes from 'prop-types';
 
 const TaskDetailModal = ({ task, onClose, onEdit, onDelete }) => {
   if (!task) return null;
-  console.log({ task });
-
   const toHours = minutes => {
     return (minutes / 60).toFixed(0);
   };
@@ -31,7 +29,7 @@ const TaskDetailModal = ({ task, onClose, onEdit, onDelete }) => {
         textColor: 'text-green-800',
       },
     };
-    return configs[status] || configs['TODO'];
+    return configs[status] || configs['todo'];
   };
 
   const getPriorityConfig = priority => {
@@ -185,9 +183,41 @@ const TaskDetailModal = ({ task, onClose, onEdit, onDelete }) => {
                 <h3 className="text-sm font-semibold text-gray-700 mb-3">
                   Atividade
                 </h3>
-                <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
-                  Nenhuma atividade ainda
-                </div>
+                {!task.activities || task.activities.length === 0 ? (
+                  <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
+                    Nenhuma atividade ainda
+                  </div>
+                ) : (
+                  <ul className="space-y-3">
+                    {task.activities.map(a => (
+                      <li key={a.id} className="flex items-start gap-3">
+                        <div className="mt-1 h-2 w-2 rounded-full bg-gray-400" />
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-900">
+                            {a.formattedMessage}
+                            {a.actor?.name && (
+                              <span className="text-gray-500">
+                                {' '}
+                                — {a.actor.name}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {a.createdAt
+                              ? new Date(a.createdAt).toLocaleString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : ''}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
 
@@ -316,6 +346,18 @@ TaskDetailModal.propTypes = {
     tags: PropTypes.arrayOf(PropTypes.string),
     createdAt: PropTypes.string,
     createdAtRaw: PropTypes.string,
+    activities: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        formattedMessage: PropTypes.string.isRequired,
+        createdAt: PropTypes.string,
+        actor: PropTypes.shape({
+          id: PropTypes.string,
+          name: PropTypes.string,
+          email: PropTypes.string,
+        }),
+      }),
+    ),
   }),
   onClose: PropTypes.func.isRequired,
   onEdit: PropTypes.func,

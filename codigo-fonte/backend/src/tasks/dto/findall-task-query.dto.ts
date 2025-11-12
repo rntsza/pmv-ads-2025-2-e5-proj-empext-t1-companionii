@@ -2,7 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { BoardStatus } from '@prisma/client';
 
-export class ListTasksQueryDto {
+export class FindAllTasksQueryDto {
   @ApiPropertyOptional({
     description: 'ID do projeto',
     example: 'proj_123',
