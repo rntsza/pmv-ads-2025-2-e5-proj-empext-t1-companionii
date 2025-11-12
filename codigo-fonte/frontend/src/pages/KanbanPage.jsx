@@ -146,6 +146,9 @@ const KanbanPage = () => {
   const handleTaskClick = async task => {
     try {
       const full = await tasksService.get(task.id);
+      const activities = await tasksService.listActivities(task.id, {
+        take: 30,
+      });
       const enriched = {
         ...task,
         description: full?.description ?? task.description,
@@ -161,6 +164,7 @@ const KanbanPage = () => {
         completedAtRaw: full?.completedAt,
         estimatedMin: full?.estimatedMin,
         actualMin: full?.actualMin,
+        activities: activities || [],
       };
       setSelectedTask(enriched);
     } catch (err) {

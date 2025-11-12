@@ -99,4 +99,16 @@ export const tasksService = {
       handleApiError(err);
     }
   },
+
+  listActivities: async (id, { cursor, take } = {}) => {
+    try {
+      const params = {};
+      if (cursor) params.cursor = cursor;
+      if (take) params.take = take;
+      const res = await api.get(`/tasks/${id}/activities`, { params });
+      return res.data; // [{ id, formattedMessage, createdAt, actor: { id, name, email } }, ...]
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
 };
