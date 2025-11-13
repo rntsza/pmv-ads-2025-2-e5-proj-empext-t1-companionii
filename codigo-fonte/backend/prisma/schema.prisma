@@ -136,7 +136,7 @@ model Invite {
 }
 
 model Company {
-  id          String   @id @default(uuid())
+    id          String   @id @default(uuid())
   ownerId     String
   owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   name        String
@@ -147,7 +147,6 @@ model Company {
 
   reports      Report[]
   integrations Integration[]
-  projects     Project[]
   members      CompanyMember[]
 }
 
