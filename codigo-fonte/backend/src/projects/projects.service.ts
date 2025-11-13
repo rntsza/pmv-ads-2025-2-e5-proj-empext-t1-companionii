@@ -141,4 +141,30 @@ export class ProjectsService {
       'Provide companyId or clientName to associate the project with a company.',
     );
   }
+
+  async listByProjectsMember(userId: string) {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+
+    return this.prisma.project.findMany({
+      where: {
+        members: {
+          some: { userId },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        colorHex: true,
+        description: true,
+        // company: {
+        //   select: {
+        //     id: true,
+        //     name: true,
+        //   },
+        // },
+      },
+    });
+  }
 }

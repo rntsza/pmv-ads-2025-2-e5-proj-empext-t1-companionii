@@ -74,7 +74,12 @@ export class ProjectsController {
   }
 
   @Get(':id/metrics')
-  metrics(@Param('id') id: string) {
-    return this.projects.metrics(id);
+  async metrics(@Param('id') id: string) {
+    return await this.projects.metrics(id);
+  }
+
+  @Get('member/:id')
+  async listByProjectMember(@Param('id') id: string) {
+    return await this.projects.listByProjectsMember(id);
   }
 }
