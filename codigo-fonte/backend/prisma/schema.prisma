@@ -169,7 +169,8 @@ model Project {
   name        String
   description String?
   colorHex    String  @default("#8b5cf6")
-  companyId   String?  
+  companyId   String
+  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   createdById String?
   createdBy   User?   @relation("ProjectCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
