@@ -54,4 +54,33 @@ export const projectsService = {
       handleApiError(err);
     }
   },
+
+  listByCompany: async (params = {}) => {
+    try {
+      const res = await api.get('/projects/select', { params });
+      return res.data.map(p => ({
+        id: p.id,
+        name: p.name,
+        companyId: p.companyId ?? null,
+        companyName: p.company?.name ?? null,
+        tasksCount: p._count?.tasks ?? 0,
+      }));
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  delete: async projectId => {
+    try {
+      const res = await api.delete(`/projects/${projectId}`);
+      return res.data;
+    } catch (err) {
+      if (err.response?.status === 403) {
+        throw new Error(
+          'Permissão negada. Apenas administradores podem excluir projetos.',
+        );
+      }
+      handleApiError(err);
+    }
+  },
 };
