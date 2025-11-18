@@ -65,20 +65,22 @@ Isso causa perda de produtividade e falhas na prestação de contas.
 
 ### Requisitos Funcionais
 
+
+
+
 | ID      | Descrição do Requisito                                                                        | Prioridade | Status             | Responsável Principal              |
 |---------|-----------------------------------------------------------------------------------------------|------------|--------------------|----------------------------------- |
 | RF-001  | Autenticação/Autorização com papéis (Proprietário, Admin, Colaborador, Cliente).              | ALTA       | Concluído          | Aaron Carvalho Balbino             |
-| RF-002  | CRUD de Empresas/Labels com cor/identidade visual.                                            | ALTA       | Backend Concluído  | William da Silva Rodrigues         |
-| RF-003  | CRUD de Tarefas Diárias (título, empresa, estimativa, descrição).                             | ALTA       | Backend Concluído  | Enzo Gomes Azevedo                 |
-| RF-004  | Kanban com colunas A Fazer \| Revisão \| Em Progresso \| Concluído e suporte a drag-and-drop. | ALTA       | Backend Concluído  | Leonardo Rodrigues Barbosa Maia    |
-| RF-005  | Assistente IA: gerar resumos profissionais das tarefas concluídas no período.                 | ALTA       | Em Desenvolvimento | William da Silva Rodrigues         |
-| RF-006  | Geração de relatórios por empresa/label (período selecionável).                               | ALTA       | Em Desenvolvimento | Aaron Carvalho Balbino             |
-| RF-007  | Exportação em PDF dos relatórios com layout profissional.                                     | ALTA       | Em Desenvolvimento | Adriana Pereira Nascimento         |
-| RF-008  | Templates de relatório por empresa (branding e seções padrão).                                | MÉDIA      | Planejado          | Enzo Gomes Azevedo                 |
-| RF-009  | Filtros/visões por empresa/label e por status.                                                | MÉDIA      | Planejado          | Leonardo Rodrigues Barbosa Maia    |
-| RF-010  | Dashboard de métricas: tempo por empresa/tipo de tarefa, histórico semanal/mensal.            | MÉDIA      | Planejado          | William da Silva Rodrigues         |
-| RF-011  | Histórico/auditoria de alterações de tarefa e tempo.                                          | MÉDIA      | Planejado          | Aaron Carvalho Balbino             |
-| RF-014  | Compartilhamento seguro de relatórios (link expira e/ou PDF).                                 | BAIXA      | Planejado          | Leonardo Rodrigues Barbosa Maia    |
+| RF-002  | Gestão Completa de Projetos/Labels: Capacidade de Cadastrar, Visualizar, Editar e Excluir informações de Projetos e Labels, incluindo a identidade visual/cores* específicas de cada uma.                                            | ALTA       | Concluído    | William da Silva Rodrigues         |
+| RF-003  | Gestão Completa de Tarefas Diárias: Capacidade de Criar, Consultar, Modificar e Deletar Tarefas Diárias, armazenando os detalhes como título, projeto associado, estimativa de tempo e descrição completa.                             | ALTA       | Pivotado pelo Cliente    | Enzo Gomes Azevedo                 |
+| RF-004  | Kanban com colunas A Fazer \| Revisão \| Em Progresso \| Concluído e suporte a drag-and-drop. | ALTA       | Concluído    |  Adriana Pereira Nascimento    |
+| RF-005  | Assistente IA: gerar resumos profissionais das tarefas concluídas no período.                 | ALTA       |Concluído   | William da Silva Rodrigues         |
+| RF-006  | Geração de relatórios por projeto /label (período selecionável).                               | ALTA       | Concluído  | Aaron Carvalho Balbino             |
+| RF-007  | Exportação em PDF dos relatórios com layout profissional.                                     | ALTA       | Concluído parcialmente | Adriana Pereira Nascimento         |
+| RF-008  | Filtros/visões por projeto /label e por status.                                                | MÉDIA      | Concluído          | Enzo Gomes Azevedo     |
+| RF-009  | Dashboard de métricas: tempo por projeto /tipo de tarefa, histórico semanal/mensal.            | MÉDIA      | Concluído          | William da Silva Rodrigues         |
+| RF-010  | Histórico/auditoria de alterações de tarefa e tempo.                                          | MÉDIA      | Concluído          | Aaron Carvalho Balbino             |
+| RF-011  | Compartilhamento seguro de relatórios (Baixar o PDF).                                 | BAIXA      | Concluído          | Enzo Gomes Azevedo     |
 
 ### Requisitos não Funcionais
 
