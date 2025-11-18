@@ -12,6 +12,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { IaModule } from './ia/ia.module';
 import { ReportsModule } from './reports/reports.module';
+import { CompaniesModule } from './companies/companies.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ReportsModule } from './reports/reports.module';
     DashboardModule,
     IaModule,
     ReportsModule,
+    CompaniesModule,
   ],
   providers: [ProjectsService],
 })

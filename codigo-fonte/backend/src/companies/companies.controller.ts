@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -42,7 +52,10 @@ export class CompaniesController {
   }
 
   @Post(':id/members')
-  async addMember(@Param('id') id: string, @Body() body: { userId: string; role: Role }) {
+  async addMember(
+    @Param('id') id: string,
+    @Body() body: { userId: string; role: Role },
+  ) {
     return this.companies.addMember(id, body.userId, body.role);
   }
 
