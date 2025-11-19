@@ -28,7 +28,7 @@ services:
       - .env
     ports:
       - '3000:3000'
-    command: sh -c "npx prisma migrate deploy && node dist/main.js"
+    command: sh -c "npx prisma migrate deploy && npm run start:prod"
 
   pgadmin:
     image: dpage/pgadmin4

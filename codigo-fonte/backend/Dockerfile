@@ -2,7 +2,7 @@ FROM node:22-alpine AS base
 WORKDIR /app
 RUN apk add --no-cache openssl
 COPY package*.json ./
-RUN npm i
+RUN npm install
 COPY prisma ./prisma
 RUN npx prisma generate
 COPY . .
