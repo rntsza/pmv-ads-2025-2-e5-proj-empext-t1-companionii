@@ -15,7 +15,6 @@ A solução visa resolver o problema da falta de uma ferramenta unificada que in
 - Aaron Carvalho Balbino
 - Adriana Pereira Nascimento
 - Enzo Gomes Azevedo
-- Leonardo Rodrigues Barbosa Maia
 - William da Silva Rodrigues
 
 ## Orientadora
