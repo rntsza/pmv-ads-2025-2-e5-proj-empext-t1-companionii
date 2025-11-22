@@ -36,9 +36,14 @@ Portanto, o desenvolvimento dessa aplicação web, que integra uma plataforma de
 
 ## Relação com a Extensão Universitária
 
-Relacionar a situação-problema da organização com o impacto social esperado com a implantação do sistema sociotécnico.
-Apresentar aqui como este projeto extensionista transforma a realidade do parceiro e dos alunos.
+O projeto Companion atua diretamente na resolução de um problema real enfrentado por desenvolvedores autônomos e pequenas equipes de desenvolvimento que carecem de ferramentas acessíveis e integradas para gestão de projetos e produtividade. A implantação do sistema sociotécnico impacta tanto o parceiro quanto os alunos envolvidos:
+
+**Impacto no Parceiro**: Ao fornecer uma solução customizada e independente para gerenciamento de equipes e projetos, o sistema permite que o desenvolvedor parceiro ganhe autonomia operacional, reduza custos com ferramentas terceirizadas e melhore a comunicação com clientes através de relatórios automatizados e profissionais. Isso resulta em maior eficiência, visibilidade de processos e capacidade de escalonamento de sua operação.
+
+**Impacto nos Alunos**: O desenvolvimento do projeto proporciona aos alunos a vivência prática de todo o ciclo de desenvolvimento de software em um contexto real, desde a identificação de requisitos até a implantação e manutenção. Essa experiência extensionista promove o desenvolvimento de competências técnicas (arquitetura de sistemas, desenvolvimento full-stack, integração de APIs) e sociais (comunicação com stakeholders, compreensão de necessidades reais, trabalho colaborativo), preparando-os para desafios do mercado de trabalho e fortalecendo sua responsabilidade social enquanto agentes transformadores da realidade através da tecnologia.
 
 ## Descrição do Parceiro
 
-Apresente uma descrição resumida sobre a organização onde o projeto será desenvolvido para que possa ser compreendido o cenário do sistema sociotécnico.
+O parceiro deste projeto é Renato, desenvolvedor autônomo com experiência no mercado de tecnologia que atualmente gerencia uma pequena equipe de desenvolvimento. Renato enfrenta desafios típicos de profissionais independentes: a necessidade de coordenar múltiplos projetos simultâneos, controlar a produtividade de seu time, gerar relatórios profissionais para clientes e manter a organização das tarefas sem depender de ferramentas corporativas de alto custo ou plataformas que não atendem às suas necessidades específicas.
+
+Sua operação atual é caracterizada por processos descentralizados, uso de múltiplas ferramentas desconectadas e dificuldades na consolidação de informações para tomada de decisão e prestação de contas. Renato busca uma solução independente, customizável e integrada que permita gerenciar seu time de forma eficiente, automatizar processos repetitivos e profissionalizar sua relação com clientes através de relatórios detalhados e transparentes sobre o andamento dos projetos.

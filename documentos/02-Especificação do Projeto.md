@@ -24,36 +24,38 @@ A arquitetura adotada é baseada em uma **abordagem em camadas (Layered Architec
 
 ### Stack de Referência (Restrição 04)
 
-* **Frontend:** React (para web app responsivo).
-* **Backend:** Node.js/NestJS (para lógica de negócio e APIs RESTful).
-* **Banco de Dados:** SQL (utilizando Prisma como ORM/Client).
-* **Inteligência Artificial:** Integração via API externa (Gemini API) para geração de resumos.
+- **Frontend:** React (para web app responsivo).
+- **Backend:** Node.js/NestJS (para lógica de negócio e APIs RESTful).
+- **Banco de Dados:** SQL (utilizando Prisma como ORM/Client).
+- **Inteligência Artificial:** Integração via API externa (Gemini API) para geração de resumos.
 
 ### Camadas da Solução
 
-* **Apresentação (Frontend):** Responsável pela interface do usuário e responsividade (RNF-001). Implementa o Kanban, Dashboard e as telas de relatórios.
-* **Serviço/Aplicação (Backend - NestJS):** Contém a lógica de negócio, autenticação (RF-001), segurança (RNF-005) e orquestra a comunicação com o Banco de Dados e a API de IA.
-* **Dados (SQL + Prisma):** Armazena informações de usuários, tarefas e relatórios. Garante a integridade e normalização dos dados (RNF-004).
-* **IA Externa:** Serviço separado para processar e gerar resumos profissionais (RF-005).
-
+- **Apresentação (Frontend):** Responsável pela interface do usuário e responsividade (RNF-001). Implementa o Kanban, Dashboard e as telas de relatórios.
+- **Serviço/Aplicação (Backend - NestJS):** Contém a lógica de negócio, autenticação (RF-001), segurança (RNF-005) e orquestra a comunicação com o Banco de Dados e a API de IA.
+- **Dados (SQL + Prisma):** Armazena informações de usuários, tarefas e relatórios. Garante a integridade e normalização dos dados (RNF-004).
+- **IA Externa:** Serviço separado para processar e gerar resumos profissionais (RF-005).
 
 # Project Model Canvas – Companion
 
 ### Justificativa
+
 Empresas têm dificuldade em organizar tarefas e gerar relatórios.  
 Isso causa perda de produtividade e falhas na prestação de contas.
 
 ### Objetivos
-- Criar um sistema híbrido (Kanban + Diário) com IA  
-- Reduzir tempo de planejamento e aumentar execução  
+
+- Criar um sistema híbrido (Kanban + Diário) com IA
+- Reduzir tempo de planejamento e aumentar execução
 - Melhorar clareza e produtividade
 
 ### Benefícios
-- Organização simples e prática  
-- Relatórios rápidos e profissionais  
+
+- Organização simples e prática
+- Relatórios rápidos e profissionais
 - Mais controle do tempo gasto
 
- ![Project Model Canvas](img/project-model-canvas.png)
+![Project Model Canvas](img/project-model-canvas.png)
 
 ## Requisitos
 
@@ -65,22 +67,19 @@ Isso causa perda de produtividade e falhas na prestação de contas.
 
 ### Requisitos Funcionais
 
-
-
-
-| ID      | Descrição do Requisito                                                                        | Prioridade | Status             | Responsável Principal              |
-|---------|-----------------------------------------------------------------------------------------------|------------|--------------------|----------------------------------- |
-| RF-001  | Autenticação/Autorização com papéis (Proprietário, Admin, Colaborador, Cliente).              | ALTA       | Concluído          | Aaron Carvalho Balbino             |
-| RF-002  | Gestão Completa de Projetos/Labels: Capacidade de Cadastrar, Visualizar, Editar e Excluir informações de Projetos e Labels, incluindo a identidade visual/cores* específicas de cada uma.                                            | ALTA       | Concluído    | William da Silva Rodrigues         |
-| RF-003  | Gestão Completa de Tarefas Diárias: Capacidade de Criar, Consultar, Modificar e Deletar Tarefas Diárias, armazenando os detalhes como título, projeto associado, estimativa de tempo e descrição completa.                             | ALTA       | Pivotado pelo Cliente    | Enzo Gomes Azevedo                 |
-| RF-004  | Kanban com colunas A Fazer \| Revisão \| Em Progresso \| Concluído e suporte a drag-and-drop. | ALTA       | Concluído    |  Adriana Pereira Nascimento    |
-| RF-005  | Assistente IA: gerar resumos profissionais das tarefas concluídas no período.                 | ALTA       |Concluído   | William da Silva Rodrigues         |
-| RF-006  | Geração de relatórios por projeto /label (período selecionável).                               | ALTA       | Concluído  | Aaron Carvalho Balbino             |
-| RF-007  | Exportação em PDF dos relatórios com layout profissional.                                     | ALTA       | Concluído parcialmente | Adriana Pereira Nascimento         |
-| RF-008  | Filtros/visões por projeto /label e por status.                                                | MÉDIA      | Concluído          | Enzo Gomes Azevedo     |
-| RF-009  | Dashboard de métricas: tempo por projeto /tipo de tarefa, histórico semanal/mensal.            | MÉDIA      | Concluído          | William da Silva Rodrigues         |
-| RF-010  | Histórico/auditoria de alterações de tarefa e tempo.                                          | MÉDIA      | Concluído          | Aaron Carvalho Balbino             |
-| RF-011  | Compartilhamento seguro de relatórios (Baixar o PDF).                                 | BAIXA      | Concluído          | Enzo Gomes Azevedo     |
+| ID     | Descrição do Requisito                                                                                                                                                                                     | Prioridade | Status                | Responsável Principal      |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | --------------------- | -------------------------- |
+| RF-001 | Autenticação/Autorização com papéis (Proprietário, Admin, Colaborador, Cliente).                                                                                                                           | ALTA       | Concluído             | Aaron Carvalho Balbino     |
+| RF-002 | Gestão Completa de Projetos/Labels: Capacidade de Cadastrar, Visualizar, Editar e Excluir informações de Projetos e Labels, incluindo a identidade visual/cores\* específicas de cada uma.                 | ALTA       | Concluído             | William da Silva Rodrigues |
+| RF-003 | Gestão Completa de Tarefas Diárias: Capacidade de Criar, Consultar, Modificar e Deletar Tarefas Diárias, armazenando os detalhes como título, projeto associado, estimativa de tempo e descrição completa. | ALTA       | Pivotado pelo Cliente | Enzo Gomes Azevedo         |
+| RF-004 | Kanban com colunas A Fazer \| Revisão \| Em Progresso \| Concluído e suporte a drag-and-drop.                                                                                                              | ALTA       | Concluído             | Adriana Pereira Nascimento |
+| RF-005 | Assistente IA: gerar resumos profissionais das tarefas concluídas no período.                                                                                                                              | ALTA       | Concluído             | William da Silva Rodrigues |
+| RF-006 | Geração de relatórios por projeto /label (período selecionável).                                                                                                                                           | ALTA       | Concluído             | Aaron Carvalho Balbino     |
+| RF-007 | Exportação em PDF dos relatórios com layout profissional.                                                                                                                                                  | ALTA       | Concluído             | Adriana Pereira Nascimento |
+| RF-008 | Filtros/visões por projeto /label e por status.                                                                                                                                                            | MÉDIA      | Concluído             | Enzo Gomes Azevedo         |
+| RF-009 | Dashboard de métricas: tempo por projeto /tipo de tarefa, histórico semanal/mensal.                                                                                                                        | MÉDIA      | Concluído             | William da Silva Rodrigues |
+| RF-010 | Histórico/auditoria de alterações de tarefa e tempo.                                                                                                                                                       | MÉDIA      | Concluído             | Aaron Carvalho Balbino     |
+| RF-011 | Compartilhamento seguro de relatórios (Baixar o PDF).                                                                                                                                                      | BAIXA      | Concluído             | Enzo Gomes Azevedo         |
 
 ### Requisitos não Funcionais
 
