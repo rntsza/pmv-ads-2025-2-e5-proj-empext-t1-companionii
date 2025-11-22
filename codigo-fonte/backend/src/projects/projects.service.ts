@@ -48,6 +48,8 @@ export class ProjectsService {
       select: {
         id: true,
         name: true,
+        description: true,
+        colorHex: true,
         companyId: true,
         company: { select: { id: true, name: true } },
         _count: { select: { tasks: true } },
