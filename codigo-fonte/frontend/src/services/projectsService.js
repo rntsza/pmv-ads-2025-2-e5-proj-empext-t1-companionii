@@ -7,7 +7,12 @@ export const projectsService = {
       return res.data.map(p => ({
         id: p.id,
         name: p.name,
+        description: p.description ?? '',
+        color: p.colorHex ?? '#3B82F6',
+        companyId: p.companyId ?? null,
         companyName: p.company?.name ?? null,
+        client: p.company?.name ?? null,
+        company: p.company ? { id: p.company.id, name: p.company.name } : null,
         tasksCount: p._count?.tasks ?? 0,
       }));
     } catch (err) {
@@ -66,6 +71,28 @@ export const projectsService = {
         tasksCount: p._count?.tasks ?? 0,
       }));
     } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  edit: async (projectId, data) => {
+    try {
+      const payload = {
+        name: data.name,
+        description: data.description,
+        colorHex: data.color,
+      };
+      if (data.companyId) payload.companyId = data.companyId;
+      if (data.client) payload.clientName = data.client;
+
+      const res = await api.patch(`/projects/${projectId}`, payload);
+      return res.data;
+    } catch (err) {
+      if (err.response?.status === 403) {
+        throw new Error(
+          'Permissão negada. Apenas administradores podem editar projetos.',
+        );
+      }
       handleApiError(err);
     }
   },

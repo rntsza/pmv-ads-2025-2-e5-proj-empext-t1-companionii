@@ -520,9 +520,11 @@ const ProjectsPage = () => {
           title={projectToEdit ? 'Editar Projeto' : 'Novo Projeto'}
         >
           <div className="p-6 max-w-2xl mx-auto">
-            <h1 className="text-2xl font-bold mb-4">Criar Projeto</h1>
+            <h1 className="text-2xl font-bold mb-4">
+              {projectToEdit ? 'Editar Projeto' : 'Criar Projeto'}
+            </h1>
             <ProjectForm
-              initialValues={projectToEdit || {}}
+              initialData={projectToEdit}
               onSubmit={handleFormSubmit}
               onCancel={closeFormModal}
               companies={companies}
