@@ -58,6 +58,7 @@ const KanbanPage = () => {
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const mapApiStatusToUi = apiStatus => {
     switch (apiStatus) {
@@ -110,6 +111,7 @@ const KanbanPage = () => {
       toast.error(err?.message || 'Falha ao carregar tarefas');
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   }, [filters.project, filters.status, filters.searchTerm]);
 
@@ -426,7 +428,7 @@ const KanbanPage = () => {
           />
         </div>
 
-        {loading ? (
+        {initialLoading ? (
           <BoardSkeleton />
         ) : view === 'kanban' ? (
           <KanbanView
