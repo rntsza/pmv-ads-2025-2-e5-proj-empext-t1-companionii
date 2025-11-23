@@ -1,159 +1,205 @@
-# Planos de Testes de Software – **Página de Tarefas / Kanban**
+# RF-003
 
-| ID             | Requisito | Descrição do Caso de Teste                                               | Entrada de Dados                                         | Resultado Esperado                                                                                      | Prioridade |
-| -------------- | --------- | ------------------------------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------- |
-| **CT-001-S**   | RF-003    | Exibição da página de tarefas e dos filtros (busca, projeto, status)     | —                                                        | Campos de busca, filtro por projeto e filtro por status são exibidos corretamente                       | Alta       |
-| **CT-002-S**   | RF-003    | Criação de nova tarefa com dados válidos                                 | Título, descrição, projeto, prioridade, status           | Tarefa criada, toast “Tarefa criada com sucesso!”, e nova tarefa aparece no Kanban                      | Alta       |
-| **CT-003-S**   | RF-004    | Exibição das colunas Kanban com contadores corretos                      | —                                                        | Quatro colunas: “A Fazer”, “Em Progresso”, “Revisão” e “Concluído”, com contagem coerente de tarefas    | Alta       |
-| **CT-004-S**   | RF-004    | Mover tarefa entre colunas (drag-and-drop)                               | Tarefa existente movida de “A Fazer” para “Em Progresso” | Status da tarefa atualizado e mantido após recarregar a página                                          | Alta       |
-| **CT-005-S**   | RF-003    | Edição de tarefa existente                                               | Alteração de título, descrição e prioridade              | Toast “Tarefa atualizada!” exibido e tarefa atualizada na lista                                         | Alta       |
-| **CT-006-S**   | RF-003    | Exclusão de tarefa existente                                             | Seleção de tarefa e confirmação de exclusão              | Toast “Tarefa excluída!” exibido e tarefa removida do Kanban                                            | Alta       |
-| **CT-007-S**   | RF-009    | Aplicação de filtros de projeto e busca                                  | Projeto específico e termo no campo “Buscar tarefas…”    | Apenas tarefas do projeto/termo filtrado são exibidas                                                   | Média      |
-| **CT-008-S**   | RF-004    | Alternar entre visualização Kanban e Lista                               | Clique nos botões de alternância                         | Layout alterna entre colunas e lista, mantendo as mesmas tarefas                                        | Média      |
-| **CT-009-I01** | RF-003    | Tentativa de criação de tarefa com campos obrigatórios vazios            | Título vazio ou projeto não selecionado                  | Toast de erro “Não foi possível criar a tarefa.” e tarefa não é criada                                  | Alta       |
-| **CT-010-I01** | RF-004    | Falha ao mover tarefa (erro no backend)                                  | Simular erro 500 em `tasksService.updateStatus`          | Toast “Falha ao mover tarefa. Voltando ao estado anterior.” exibido e tarefa retorna ao estado original | Alta       |
-| **CT-011-I01** | RF-003    | Falha ao atualizar tarefa (erro no backend)                              | Simular erro ao salvar edição                            | Toast “Não foi possível atualizar a tarefa.” exibido                                                    | Alta       |
-| **CT-012-I01** | RF-003    | Falha ao excluir tarefa (erro no backend)                                | Simular erro ao excluir                                  | Toast “Não foi possível excluir a tarefa.” exibido e tarefa permanece visível                           | Alta       |
-| **CT-013-S**   | RF-011    | Verificar atualização de data/hora ao mover tarefa concluída (auditoria) | Tarefa com status DONE                                   | Campo “Concluído em” atualizado corretamente no modal de detalhes                                       | Média      |
+## Gestão Completa de Tarefas Diárias
+
+<table>
+  <tr>
+    <th colspan="6" width="1000">CT-RF-00301<br>Criação de tarefa com campos obrigatórios (happy path)</th>
+  </tr>
+  <tr>
+    <td width="170"><strong>Critérios de êxito</strong></td>
+    <td colspan="5">
+      Ao preencher título e projeto e enviar o formulário de criação de tarefa, a API
+      <code>POST /tasks</code> deve ser chamada com os dados corretos. A tarefa criada deve aparecer na
+      página de Kanban, com status padrão &quot;A Fazer&quot;, prioridade padrão &quot;Média&quot; e demais
+      campos opcionais preenchidos quando informados. Uma notificação de sucesso (&quot;Tarefa criada
+      com sucesso!&quot;) deve ser exibida.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Responsável pela funcionalidade (desenvolvimento e teste)</strong></td>
+    <td width="430">
+      Desenvolvimento: Enzo Gomes Azevedo<br>
+      Teste: William da Silva Rodrigues
+    </td>
+    <td width="100"><strong>Data do Teste</strong></td>
+    <td width="150">10/11/2025</td>
+  </tr>
+  <tr>
+    <td width="170"><strong>Comentário</strong></td>
+    <td colspan="5">
+      Caso de teste focado na criação de tarefas pela <code>KanbanPage</code> usando o
+      <code>TaskForm</code>. Espera-se que a chamada a <code>tasksService.create</code> ocorra com
+      <code>title</code> e <code>projectId</code> obrigatórios e que a lista seja recarregada via
+      <code>loadTasks</code>. Comentário deve ser atualizado após execução informando se a tarefa foi
+      criada e exibida corretamente na coluna &quot;A Fazer&quot;.
+    </td>
+  </tr>
+  <tr>
+    <td colspan="6" align="center"><strong>Evidência</strong></td>
+  </tr>
+  <tr>
+    <td colspan="6" align="center"><img src="../img/CT-RF-00301.png" alt="CT-RF-00301 Evidence"></td>
+  </tr>
+</table>
+
+<br>
+
+<table>
+  <tr>
+    <th colspan="6" width="1000">CT-RF-00302<br>Validação de campos obrigatórios na criação de tarefa</th>
+  </tr>
+  <tr>
+    <td width="170"><strong>Critérios de êxito</strong></td>
+    <td colspan="5">
+      Ao tentar enviar o formulário sem preencher o <strong>Título</strong> ou sem selecionar um
+      <strong>Projeto</strong>, o navegador deve impedir o envio do formulário devido aos atributos
+      <code>required</code> nos campos. Nenhuma requisição à API <code>POST /tasks</code> deve ser
+      disparada e o usuário deve permanecer na tela de criação.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Responsável pela funcionalidade (desenvolvimento e teste)</strong></td>
+    <td width="430">
+      Desenvolvimento: Enzo Gomes Azevedo<br>
+      Teste: William da Silva Rodrigues
+    </td>
+    <td width="100"><strong>Data do Teste</strong></td>
+    <td width="150">10/11/2025</td>
+  </tr>
+  <tr>
+    <td width="170"><strong>Comentário</strong></td>
+    <td colspan="5">
+      Teste focado nas validações HTML do <code>TaskForm</code> (campos <code>title</code> e
+      <code>projectId</code> com <code>required</code>). Ao executar, registrar se o navegador exibiu
+      mensagens padrões de campo obrigatório e se o botão de envio não chegou a disparar a ação
+      <code>onSubmit</code>. Esperado: impedimento total de criação de tarefa sem esses campos.
+    </td>
+  </tr>
+  <tr>
+    <td colspan="6" align="center"><strong>Evidência</strong></td>
+  </tr>
+  <tr>
+    <td colspan="6" align="center"><img src="../img/CT-RF-00302.png" alt="CT-RF-00302 Evidence"></td>
+  </tr>
+</table>
+
+<br>
+
+<table>
+  <tr>
+    <th colspan="6" width="1000">CT-RF-00303<br>Edição de tarefa existente a partir do detalhe</th>
+  </tr>
+  <tr>
+    <td width="170"><strong>Critérios de êxito</strong></td>
+    <td colspan="5">
+      Ao abrir o <strong>TaskDetailModal</strong> de uma tarefa existente e acionar a ação de
+      &quot;Editar&quot;, o formulário deve ser carregado com os dados atuais. Após alterar campos como
+      título, status, prioridade, data de vencimento, horas estimadas e tags e confirmar, a API
+      <code>PATCH /tasks/:id</code> deve ser chamada via <code>tasksService.update</code>, a lista de
+      tarefas deve ser recarregada e a notificação &quot;Tarefa atualizada!&quot; deve ser exibida.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Responsável pela funcionalidade (desenvolvimento e teste)</strong></td>
+    <td width="430">
+      Desenvolvimento: Enzo Gomes Azevedo<br>
+      Teste: William da Silva Rodrigues
+    </td>
+    <td width="100"><strong>Data do Teste</strong></td>
+    <td width="150">10/11/2025</td>
+  </tr>
+  <tr>
+    <td width="170"><strong>Comentário</strong></td>
+    <td colspan="5">
+      Teste verifica o fluxo de edição completo, incluindo o preenchimento inicial do
+      <code>TaskForm</code> com <code>initialData</code>, envio para <code>tasksService.update</code>,
+      recarga das tarefas e reset dos estados <code>taskToEdit</code> e <code>selectedTask</code>.
+      Comentário final deve mencionar se os dados editados persistiram corretamente e se houve algum
+      erro de UI ou backend.
+    </td>
+  </tr>
+  <tr>
+    <td colspan="6" align="center"><strong>Evidência</strong></td>
+  </tr>
+  <tr>
+    <td colspan="6" align="center"><img src="../img/CT-RF-00303.png" alt="CT-RF-00303 Evidence"></td>
+  </tr>
+  <tr>
+    <td colspan="6" align="center"><img src="../img/CT-RF-00303-2.png" alt="CT-RF-00303-2 Evidence"></td>
+  </tr>
+</table>
+
+<br>
+
+<table>
+  <tr>
+    <th colspan="6" width="1000">CT-RF-00304<br>Exclusão de tarefa pelo detalhe</th>
+  </tr>
+  <tr>
+    <td width="170"><strong>Critérios de êxito</strong></td>
+    <td colspan="5">
+      Ao selecionar uma tarefa e acionar a opção de exclusão no <strong>TaskDetailModal</strong>, a
+      API <code>DELETE /tasks/:id</code> deve ser chamada via <code>tasksService.remove</code>. Em
+      caso de sucesso, a lista deve ser recarregada via <code>loadTasks</code>, o modal deve ser
+      fechado e uma notificação &quot;Tarefa excluída!&quot; deve ser exibida. Em caso de erro, a
+      mensagem &quot;Não foi possível excluir a tarefa.&quot; deve ser apresentada.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Responsável pela funcionalidade (desenvolvimento e teste)</strong></td>
+    <td width="430">
+      Desenvolvimento: Enzo Gomes Azevedo<br>
+      Teste: William da Silva Rodrigues
+    </td>
+    <td width="100"><strong>Data do Teste</strong></td>
+    <td width="150">10/11/2025</td>
+  </tr>
+  <tr>
+    <td width="170"><strong>Comentário</strong></td>
+    <td colspan="5">
+      Teste garante a remoção consistente de tarefas, inclusive comportamento em falha. Deve-se
+      registrar se a tarefa sumiu da visão Kanban/ListView, se os contadores de estatísticas (cards
+      de quantidade por status) foram atualizados e se os toasts de sucesso/erro apareceram corretamente.
+    </td>
+  </tr>
+  <tr>
+    <td colspan="6" align="center"><strong>Evidência</strong></td>
+  </tr>
+  <tr>
+    <td colspan="6" align="center"><img src="../img/CT-RF-00304.png" alt="CT-RF-00304 Evidence"></td>
+  </tr>
+</table>
 
 ---
 
-## Casos de Teste de **Sucesso**
+## Observações Técnicas
 
-### CT-001-S – Exibição da página e filtros
+**Endpoints testados:**
 
-```
-<table>
-  <tr><th colspan="2">CT-001-S<br>Exibição da página de tarefas e filtros</th></tr>
-  <tr><td><strong>Descrição</strong></td><td>Validar renderização dos componentes principais (busca, filtros e botões de visualização).</td></tr>
-  <tr><td><strong>Responsável</strong></td><td>Desenvolvedor Frontend</td></tr>
-  <tr><td><strong>Tipo</strong></td><td>Sucesso</td></tr>
-  <tr><td><strong>Requisitos associados</strong></td><td>RF-003, RF-009</td></tr>
-  <tr><td><strong>Passos</strong></td><td>
-1. Acessar /tasks (ou /kanban).<br>
-2. Verificar campo “Buscar tarefas…”.<br>
-3. Verificar selects de “Projeto” e “Status”.<br>
-4. Confirmar botão “+ Nova Tarefa” e alternadores Kanban/Lista visíveis.
-</td></tr>
-  <tr><td><strong>Dados</strong></td><td>—</td></tr>
-  <tr><td><strong>Critério de êxito</strong></td><td>Toda a interface e filtros renderizados corretamente.</td></tr>
-</table>
-```
+- `POST /tasks` – Criação de tarefa.
+- `GET /tasks` – Listagem de tarefas para exibição em Kanban/Lista.
+- `PATCH /tasks/:id` – Atualização de tarefa.
+- `DELETE /tasks/:id` – Remoção de tarefa.
 
-### CT-002-S – Criação de nova tarefa
+**Componentes testados:**
 
-```
-<table>
-  <tr><th colspan="2">CT-002-S<br>Criação de nova tarefa com dados válidos</th></tr>
-  <tr><td><strong>Descrição</strong></td><td>Garantir que a criação de tarefa funciona e é exibida no quadro.</td></tr>
-  <tr><td><strong>Responsável</strong></td><td>Desenvolvedor Frontend</td></tr>
-  <tr><td><strong>Tipo</strong></td><td>Sucesso</td></tr>
-  <tr><td><strong>Requisitos</strong></td><td>RF-003</td></tr>
-  <tr><td><strong>Passos</strong></td><td>
-1. Clicar “+ Nova Tarefa”.<br>
-2. Preencher título, descrição, projeto e prioridade.<br>
-3. Clicar em “Salvar”.<br>
-4. Verificar toast de sucesso e nova tarefa no Kanban.
-</td></tr>
-  <tr><td><strong>Dados</strong></td><td>Título: “Implementar login”<br>Descrição: “Tela inicial de login”<br>Status: TODO</td></tr>
-  <tr><td><strong>Critério</strong></td><td>Tarefa criada e exibida na coluna correspondente.</td></tr>
-</table>
-```
+- `KanbanPage` (`codigo-fonte/frontend/src/pages/KanbanPage.jsx`) – Página principal de tarefas.
+- `TaskForm` (`codigo-fonte/frontend/src/components/tasks/TaskForm.jsx`) – Formulário de criação/edição.
+- `TaskDetailModal` (`codigo-fonte/frontend/src/components/tasks/TaskDetailModal.jsx`) – Detalhe e ações da tarefa.
+- `KanbanView` e `ListView` (`codigo-fonte/frontend/src/components/kanban/*.jsx`) – Exibição das tarefas.
+- `tasksService` (`codigo-fonte/frontend/src/services/tasksService.js`) – Cliente HTTP para `/tasks`.
 
-### CT-004-S – Mover tarefa entre colunas
+**Validações:**
 
-```
-<table>
-  <tr><th colspan="2">CT-004-S<br>Movimentação de tarefa entre colunas</th></tr>
-  <tr><td><strong>Descrição</strong></td><td>Verificar que o drag-and-drop atualiza o status corretamente.</td></tr>
-  <tr><td><strong>Responsável</strong></td><td>QA</td></tr>
-  <tr><td><strong>Tipo</strong></td><td>Sucesso</td></tr>
-  <tr><td><strong>Requisitos</strong></td><td>RF-004</td></tr>
-  <tr><td><strong>Passos</strong></td><td>
-1. Selecionar tarefa da coluna “A Fazer”.<br>
-2. Arrastar para “Em Progresso”.<br>
-3. Soltar e aguardar atualização.<br>
-4. Recarregar a página e confirmar persistência do status.
-</td></tr>
-  <tr><td><strong>Dados</strong></td><td>Tarefa: “Implementar login”.</td></tr>
-  <tr><td><strong>Critério</strong></td><td>Status salvo e refletido corretamente no backend.</td></tr>
-</table>
-```
+- Campo **Título** com `required` no formulário.
+- Campo **Projeto** com `required` e opção padrão “Selecione um projeto”.
+- Campo **Horas Estimadas** como número, com `min="0"` e `step="0.5"`.
+- Limpeza e unicidade de tags no formulário (trim e prevenção de duplicados).
 
-### CT-005-S – Edição de tarefa existente
+**Regras de negócio:**
 
-```
-<table>
-  <tr><th colspan="2">CT-005-S<br>Edição de tarefa existente</th></tr>
-  <tr><td><strong>Descrição</strong></td><td>Validar atualização de informações de uma tarefa via modal de edição.</td></tr>
-  <tr><td><strong>Responsável</strong></td><td>Desenvolvedor Frontend</td></tr>
-  <tr><td><strong>Tipo</strong></td><td>Sucesso</td></tr>
-  <tr><td><strong>Requisitos</strong></td><td>RF-003</td></tr>
-  <tr><td><strong>Passos</strong></td><td>
-1. Clicar em uma tarefa.<br>
-2. No modal, clicar “Editar”.<br>
-3. Alterar o título e prioridade.<br>
-4. Clicar “Salvar”.<br>
-5. Verificar toast de sucesso.
-</td></tr>
-  <tr><td><strong>Dados</strong></td><td>Título novo: “Login (refatorado)”.</td></tr>
-  <tr><td><strong>Critério</strong></td><td>Tarefa atualizada e refletida na tela.</td></tr>
-</table>
-```
-
-### CT-006-S – Exclusão de tarefa
-
-```
-<table>
-  <tr><th colspan="2">CT-006-S<br>Exclusão de tarefa</th></tr>
-  <tr><td><strong>Descrição</strong></td><td>Garantir que a exclusão remove a tarefa e apresenta feedback ao usuário.</td></tr>
-  <tr><td><strong>Responsável</strong></td><td>QA</td></tr>
-  <tr><td><strong>Tipo</strong></td><td>Sucesso</td></tr>
-  <tr><td><strong>Requisitos</strong></td><td>RF-003</td></tr>
-  <tr><td><strong>Passos</strong></td><td>
-1. Clicar em uma tarefa.<br>
-2. No modal, clicar “Excluir”.<br>
-3. Confirmar a ação.<br>
-4. Verificar toast de sucesso e remoção da tarefa.
-</td></tr>
-  <tr><td><strong>Critério</strong></td><td>Tarefa não mais exibida após exclusão.</td></tr>
-</table>
-```
-
----
-
-## Casos de Teste de **Insucesso**
-
-### CT-009-I01 – Criação com campos obrigatórios vazios
-
-```
-<table>
-  <tr><th colspan="2">CT-009-I01<br>Criação de tarefa com campos obrigatórios vazios</th></tr>
-  <tr><td><strong>Descrição</strong></td><td>Testar validação de formulário de criação de tarefa.</td></tr>
-  <tr><td><strong>Tipo</strong></td><td>Insucesso</td></tr>
-  <tr><td><strong>Requisito</strong></td><td>RF-003</td></tr>
-  <tr><td><strong>Passos</strong></td><td>
-1. Abrir modal “+ Nova Tarefa”.<br>
-2. Deixar título e projeto vazios.<br>
-3. Clicar em “Salvar”.
-</td></tr>
-  <tr><td><strong>Critério</strong></td><td>Toast de erro “Não foi possível criar a tarefa.” exibido; modal não fecha.</td></tr>
-</table>
-```
-
-### CT-010-I01 – Falha ao mover tarefa
-
-```
-<table>
-  <tr><th colspan="2">CT-010-I01<br>Falha ao mover tarefa (erro no backend)</th></tr>
-  <tr><td><strong>Descrição</strong></td><td>Simular erro de rede na mudança de status.</td></tr>
-  <tr><td><strong>Tipo</strong></td><td>Insucesso</td></tr>
-  <tr><td><strong>Requisito</strong></td><td>RF-004</td></tr>
-  <tr><td><strong>Passos</strong></td><td>
-1. Arrastar tarefa de “A Fazer” para “Revisão”.<br>
-2. Backend retorna 500.<br>
-3. Observar comportamento da UI.
-</td></tr>
-  <tr><td><strong>Critério</strong></td><td>Toast “Falha ao mover tarefa. Voltando ao estado anterior.” e tarefa retorna ao status original.</td></tr>
-</table>
-```
+- Tarefas devem estar sempre associadas a um projeto existente.
+- Status da tarefa mapeado via `STATUS_MAP` (todo → TODO, in-progress → IN_PROGRESS, etc.).
+- Prioridade mapeada via `PRIORITY_MAP` (low, medium, high, urgent).
+- Após qualquer alteração (criar/editar/excluir) a lista é recarregada para manter a consistência visual e numérica.
