@@ -61,3 +61,4 @@ yarn.lock
 pnpm-workspace.yaml
 
 src/generated/
+.vscode/
