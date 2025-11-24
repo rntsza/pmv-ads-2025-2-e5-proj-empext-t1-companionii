@@ -10,6 +10,10 @@ const CompanySelect = ({ value, onChange, companies }) => {
   const wrapperRef = useRef();
 
   useEffect(() => {
+    setSearch(value?.name || '');
+  }, [value]);
+
+  useEffect(() => {
     if (!search) {
       setFiltered([]);
       return;
@@ -44,7 +48,7 @@ const CompanySelect = ({ value, onChange, companies }) => {
       const newCompany = await companiesService.create({
         name: search.trim(),
         description: null,
-        color: '#3B82F6', // default color
+        color: '#3B82F6',
       });
       onChange({
         id: newCompany.id,
@@ -54,8 +58,6 @@ const CompanySelect = ({ value, onChange, companies }) => {
       });
       setSearch(newCompany.name);
       setShowDropdown(false);
-    } catch (err) {
-      console.error('Erro ao criar empresa:', err);
     } finally {
       setLoading(false);
     }
@@ -66,7 +68,6 @@ const CompanySelect = ({ value, onChange, companies }) => {
       <label className="block text-sm font-medium text-gray-700 mb-2">
         Empresa <span className="text-red-500">*</span>
       </label>
-
       <input
         type="text"
         value={search}
@@ -80,7 +81,6 @@ const CompanySelect = ({ value, onChange, companies }) => {
         required
         disabled={loading}
       />
-
       {showDropdown && (
         <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg max-h-60 overflow-auto shadow-lg">
           {filtered.length > 0

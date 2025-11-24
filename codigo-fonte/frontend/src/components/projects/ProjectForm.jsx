@@ -31,15 +31,28 @@ const ProjectForm = ({
   });
 
   useEffect(() => {
-    if (initialData) {
-      setFormData({
-        name: initialData.name || '',
-        description: initialData.description || '',
-        color: initialData.color || '#3B82F6',
-        company: initialData.company || null,
-      });
+    if (!initialData) return;
+
+    let selectedCompany = null;
+
+    if (initialData.companyId && companies.length > 0) {
+      selectedCompany =
+        companies.find(c => c.id === initialData.companyId) || null;
+    } else if (initialData.clientName) {
+      selectedCompany = { id: null, name: initialData.clientName };
+    } else if (initialData.company) {
+      selectedCompany = initialData.company;
     }
-  }, [initialData]);
+
+    console.log('initialData:', initialData);
+    console.log('selectedCompany:', selectedCompany);
+    setFormData({
+      name: initialData.name || '',
+      description: initialData.description || '',
+      color: initialData.color || '#3B82F6',
+      company: selectedCompany,
+    });
+  }, [initialData, companies]);
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -88,7 +101,12 @@ const ProjectForm = ({
       </div>
 
       <CompanySelect
-        value={formData.company}
+        value={
+          formData.company?.id
+            ? companies.find(c => c.id === formData.company.id) ||
+              formData.company
+            : formData.company
+        }
         onChange={company => setFormData(prev => ({ ...prev, company }))}
         companies={companies}
       />

@@ -69,6 +69,10 @@ const ProjectsPage = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState(null);
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedClient, setSelectedClient] = useState('ALL');
+  const [sortOption, setSortOption] = useState('recent');
+
   const loadMetrics = useCallback(async () => {
     if (!projects || projects.length === 0) {
       setMetrics({
@@ -125,7 +129,6 @@ const ProjectsPage = () => {
       setProjects(safe);
       setLoaded(true);
     } catch (err) {
-      console.error(err);
       toast.error(err?.message || 'Falha ao carregar projetos');
       setLoaded(true);
     }
@@ -138,8 +141,7 @@ const ProjectsPage = () => {
     } catch {
       setCompanies([]);
     }
-  }, [toast]);
-
+  }, []);
 
   const [companiesLoaded, setCompaniesLoaded] = useState(false);
   useEffect(() => {
@@ -147,7 +149,6 @@ const ProjectsPage = () => {
       loadCompanies().finally(() => setCompaniesLoaded(true));
     }
   }, [companiesLoaded, loadCompanies]);
-
 
   useEffect(() => {
     if (projects === null) loadProjects();
@@ -162,10 +163,12 @@ const ProjectsPage = () => {
     setIsFormModalOpen(true);
   };
 
-  const openEditModal = p => {
-    setProjectToEdit(p);
+  const openEditModal = project => {
+    const company = companies.find(c => c.id === project.companyId) || null;
+    setProjectToEdit({ ...project, company });
     setIsFormModalOpen(true);
   };
+
 
   const closeFormModal = () => {
     setIsFormModalOpen(false);
@@ -184,7 +187,6 @@ const ProjectsPage = () => {
         status: 'TODO',
       });
     } catch (err) {
-      console.error('Project creation error:', err);
       toast.error(err?.message || 'Não foi possível criar o projeto.');
     }
   };
@@ -204,7 +206,6 @@ const ProjectsPage = () => {
       );
       closeFormModal();
     } catch (err) {
-      console.error('Project form submit error:', err);
       toast.error(err?.message || 'Não foi possível processar o projeto.');
     }
   };
@@ -226,7 +227,6 @@ const ProjectsPage = () => {
       toast.success('Projeto deletado com sucesso!');
       closeDeleteModal();
     } catch (err) {
-      console.error('Delete project error:', err);
       toast.error(err?.message || 'Não foi possível deletar o projeto.');
     }
   };
@@ -311,6 +311,43 @@ const ProjectsPage = () => {
     </svg>
   );
 
+  let filteredProjects = projects || [];
+
+  if (searchTerm.trim() !== '') {
+    const t = searchTerm.toLowerCase();
+    filteredProjects = filteredProjects.filter(
+      p =>
+        p.name.toLowerCase().includes(t) ||
+        (p.description && p.description.toLowerCase().includes(t)) ||
+        (p.client && p.client.toLowerCase().includes(t)),
+    );
+  }
+
+  if (selectedClient !== 'ALL') {
+    filteredProjects = filteredProjects.filter(
+      p => p.client === selectedClient,
+    );
+  }
+
+  filteredProjects = [...filteredProjects];
+
+  if (sortOption === 'az') {
+    filteredProjects.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  if (sortOption === 'za') {
+    filteredProjects.sort((a, b) => b.name.localeCompare(a.name));
+  }
+  if (sortOption === 'recent') {
+    filteredProjects.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+    );
+  }
+  if (sortOption === 'oldest') {
+    filteredProjects.sort(
+      (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+    );
+  }
+
   return (
     <AppLayout pageType="projects">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -377,46 +414,36 @@ const ProjectsPage = () => {
                     type="text"
                     placeholder="Buscar projetos..."
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <svg
-                    className="w-5 h-5 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium text-gray-700">
-                    Todos os clientes
-                  </span>
-                  <svg
-                    className="w-4 h-4 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-                <select className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent appearance-none bg-white text-sm font-medium text-gray-700 pr-10">
-                  <option>Mais recentes</option>
-                  <option>Mais antigos</option>
-                  <option>A-Z</option>
-                  <option>Z-A</option>
+
+                <select
+                  className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700"
+                  value={selectedClient}
+                  onChange={e => setSelectedClient(e.target.value)}
+                >
+                  <option value="ALL">Todos os clientes</option>
+                  {companies.map(c => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent appearance-none bg-white text-sm font-medium text-gray-700 pr-10"
+                  value={sortOption}
+                  onChange={e => setSortOption(e.target.value)}
+                >
+                  <option value="recent">Mais recentes</option>
+                  <option value="oldest">Mais antigos</option>
+                  <option value="az">A-Z</option>
+                  <option value="za">Z-A</option>
                 </select>
               </div>
+
               <Button
                 variant="primary"
                 onClick={openCreateModal}
@@ -474,7 +501,7 @@ const ProjectsPage = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {projects.map(project => (
+                      {filteredProjects.map(project => (
                         <tr
                           key={project.id}
                           className="hover:bg-gray-50 transition-colors"
